@@ -8,13 +8,15 @@ import org.joml.*;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static minusk.tiletech.utils.Util.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.glUniform4f;
 import static org.lwjgl.opengl.GL20.glUniformMatrix4fv;
 import static org.lwjgl.system.jemalloc.JEmalloc.je_malloc;
-import static minusk.tiletech.utils.Util.*;
 
 /**
  * Created by MinusKelvin on 1/25/16.
@@ -28,19 +30,19 @@ public class World {
 	public final OpenSimplexNoise noise2Dc = new OpenSimplexNoise(System.currentTimeMillis()*31*31);
 	
 	private final ConcurrentHashMap<Vector2i, VerticalChunk> world = new ConcurrentHashMap<>(4096);
-	private final Matrix4f lookaround = new Matrix4f();
+	private final Matrix4f lookaround = new Matrix4f(), shadowCam = new Matrix4f();
 	private final ByteBuffer matrixUpload = je_malloc(64);
 	private final FrustumIntersection culler = new FrustumIntersection();
 	private final Vector2i index2a = new Vector2i();
 	private final Vector2i index2b = new Vector2i();
 	private final Vector3i index3 = new Vector3i();
-	private final ArrayDeque<Chunk> updateList = new ArrayDeque<>();
+	private final ArrayList<Vector3i> updateList = new ArrayList<>();
 	private final ArrayDeque<Vector3i> generatePoints = new ArrayDeque<>();
 	
 	public World() {
 		currentWorld = this;
-		for (int i = -1; i <= 1; i++)
-			for (int j = -1; j <= 1; j++)
+		for (int i = -4; i <= 4; i++)
+			for (int j = -4; j <= 4; j++)
 				rawGenerateChunk(i,j,0);
 		player.spawn();
 		Thread worldGenThread = new Thread(() -> {
@@ -62,7 +64,7 @@ public class World {
 		worldGenThread.start();
 		for (int i = -16; i <= 16; i++)
 			for (int j = -16; j <= 16; j++)
-				if (i < -1 || i > 1 || j < -1 || j > 1)
+				if (i < -4 || i > 4 || j < -4 || j > 4)
 					generatePoints.add(new Vector3i(i,j,0));
 	}
 	
@@ -115,7 +117,7 @@ public class World {
 			chunk.blockIDs[cnkIdx(x)][cnkIdx(z)][cnkIdx(y)] = id;
 			if (!chunk.needsUpdate) {
 				chunk.needsUpdate = true;
-				updateList.add(chunk);
+				updateList.add(new Vector3i(getCnk(x),getCnk(y),getCnk(z)));
 			}
 			return true;
 		}
@@ -127,7 +129,7 @@ public class World {
 		if (chunk == null)
 			return;
 		chunk.needsUpdate = true;
-		updateList.add(chunk);
+		updateList.add(new Vector3i(x,y,z));
 	}
 	
 	public int random(int min, int max) {
@@ -138,11 +140,33 @@ public class World {
 		player.update();
 		
 		int c = 0;
-		while (!updateList.isEmpty() && c++ < 32) {
-			Chunk chunk = updateList.poll();
-			chunk.needsUpdate = false;
-			chunk.updateVBO();
+		Vector3i[] closest = new Vector3i[8];
+		int[] distances = new int[8];
+		outer:
+		for (int i = 0; i < updateList.size(); i++) {
+			int far = 0;
+			for (int j = 0; j < 8; j++) {
+				if (closest[j] == null) {
+					closest[j] = updateList.get(i);
+					distances[j] = (int) closest[j].distanceSquared(getCnk((int) Math.floor(player.center.x)),
+							getCnk((int) Math.floor(player.center.y)), getCnk((int) Math.floor(player.center.z)));
+					continue outer;
+				} else
+					if (distances[far] > distances[j])
+						far = j;
+			}
+			int dist = (int) updateList.get(i).distanceSquared(getCnk((int) Math.floor(player.center.x)),
+					getCnk((int) Math.floor(player.center.y)), getCnk((int) Math.floor(player.center.z)));
+			if (dist < distances[far]) {
+				closest[far] = updateList.get(i);
+				distances[far] = dist;
+			}
 		}
+		for (int i = 0; i < 8; i++) {
+			if (closest[i] != null)
+				getChunk(closest[i].x, closest[i].y, closest[i].z, 0).updateVBO();
+		}
+		updateList.removeAll(Arrays.asList(closest));
 	}
 	
 	public void renderWorld(float alpha) {
@@ -152,21 +176,51 @@ public class World {
 		lookaround.translate(-eye.x, -eye.y, -eye.z);
 		GLHandler.projection.mul(lookaround, lookaround);
 		
+		glCullFace(GL_FRONT);
+		glDepthFunc(GL_LEQUAL);
+		
+		for (int i = 0; i < 4; i++) {
+			GLHandler.prepareShadow(i);
+			shadowCam.setOrtho(-5*intpow(4,i), 5*intpow(4,i), -5*intpow(4,i), 5*intpow(4,i), 256, -256);
+			shadowCam.lookAlong(-0.440225f, 0.880451f, 0.17609f, 0, 1, 0);
+			shadowCam.translate(-eye.x, -eye.y, -eye.z);
+			
+			shadowCam.get(matrixUpload);
+			glUniformMatrix4fv(GLHandler.getShadowProjLoc(), false, matrixUpload.asFloatBuffer());
+			culler.set(shadowCam);
+			
+			world.values().forEach(cp -> {
+				if (cp.isGened())
+					cp.render(culler, true);
+			});
+		}
+		shadowCam.setOrtho(-5, 5, -5, 5, 256, -256);
+		shadowCam.lookAlong(-0.440225f, 0.880451f, 0.17609f, 0, 1, 0);
+		shadowCam.translate(-eye.x, -eye.y, -eye.z);
+		shadowCam.get(matrixUpload);
+		
+		glCullFace(GL_BACK);
+		
+		GLHandler.prepareScene();
+		glUniformMatrix4fv(GLHandler.getSprojLoc(), false, matrixUpload.asFloatBuffer());
 		lookaround.get(matrixUpload);
 		glUniformMatrix4fv(GLHandler.getProjLoc(), false, matrixUpload.asFloatBuffer());
 		glUniform4f(GLHandler.getSundirLoc(), 0.440225f, 0.880451f, -0.17609f, 1);
-		
-		glCullFace(GL_BACK);
-		glDepthFunc(GL_LEQUAL);
-		
 		culler.set(lookaround);
 		
 		world.values().forEach(cp -> {
 			if (cp.isGened())
-				cp.render(culler);
+				cp.render(culler, false);
 		});
 		
 		player.render(false);
+	}
+	
+	private int intpow(int b, int e) {
+		int total = 1;
+		for (int i = 0; i < e; i++)
+			total *= b;
+		return total;
 	}
 	
 	private VerticalChunk getChunk(int x, int z, int dim) {
@@ -178,7 +232,7 @@ public class World {
 		if (vc != null && getChunk(x-1,z,dim) != null && getChunk(x+1,z,dim) != null && getChunk(x,z-1,dim) != null && getChunk(x,z+1,dim) != null) {
 			vc.generate();
 			for (int i = 0; i < 8; i++)
-				updateList.add(vc.chunks[i]);
+				updateList.add(new Vector3i(x,i,z));
 		}
 	}
 	

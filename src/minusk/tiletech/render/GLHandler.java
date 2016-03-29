@@ -15,8 +15,10 @@ import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.GL_TEXTURE_MAX_LEVEL;
 import static org.lwjgl.opengl.GL12.glTexImage3D;
+import static org.lwjgl.opengl.GL13.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
+import static org.lwjgl.opengl.GL32.glFramebufferTexture;
 import static org.lwjgl.stb.STBImage.stbi_image_free;
 import static org.lwjgl.stb.STBImage.stbi_load;
 import static org.lwjgl.system.jemalloc.JEmalloc.je_free;
@@ -26,18 +28,29 @@ import static org.lwjgl.system.jemalloc.JEmalloc.je_malloc;
  * Created by MinusKelvin on 1/25/16.
  */
 public class GLHandler {
-	private static int blockTexture, baseShader, projLoc, sundirLoc, width=1024, height=576;
+	private static int[] shadowTex = new int[4];
+	private static int fbo, blockTexture, baseShader, shadowShader, shadowProjLoc, sprojLoc, projLoc, sundirLoc;
+	private static int width=1024, height=576, shadowmapSize=1024;
 	public static final Matrix4f projection = new Matrix4f().setPerspective((float) Math.toRadians(90), 1024/576f, 0.1f, 1512);
 	private static GLFWFramebufferSizeCallback fbs;
 	private static GLFWCursorPosCallback cp;
 	private static GLFWKeyCallback k;
 	private static GLFWMouseButtonCallback mb;
+	private static ByteBuffer clearDepth;
 	private static long window;
 	private static boolean grabbed;
 	private static boolean[] taps = new boolean[GLFW_KEY_LAST+1], mTaps = new boolean[GLFW_MOUSE_BUTTON_LAST+1];
 	
 	public static int getProjLoc() {
 		return projLoc;
+	}
+	
+	public static int getSprojLoc() {
+		return sprojLoc;
+	}
+	
+	public static int getShadowProjLoc() {
+		return shadowProjLoc;
 	}
 	
 	public static int getSundirLoc() {
@@ -88,39 +101,80 @@ public class GLHandler {
 		
 		glBindVertexArray(glGenVertexArrays());
 		
-		// Shaders
-		int vertex = glCreateShader(GL_VERTEX_SHADER);
-		glShaderSource(vertex, new Scanner(GLHandler.class.getResourceAsStream("/res/shaders/base.vs.glsl")).useDelimiter("\\Z").next());
-		glCompileShader(vertex);
-		if (glGetShaderi(vertex, GL_COMPILE_STATUS) != 1) {
-			System.err.println(glGetShaderInfoLog(vertex));
-			return;
+		// Base Shader
+		{
+			int vertex = glCreateShader(GL_VERTEX_SHADER);
+			glShaderSource(vertex, new Scanner(GLHandler.class.getResourceAsStream("/res/shaders/base.vs.glsl")).useDelimiter("\\Z").next());
+			glCompileShader(vertex);
+			if (glGetShaderi(vertex, GL_COMPILE_STATUS) != 1) {
+				System.err.println(glGetShaderInfoLog(vertex));
+				return;
+			}
+			
+			int fragment = glCreateShader(GL_FRAGMENT_SHADER);
+			glShaderSource(fragment, new Scanner(GLHandler.class.getResourceAsStream("/res/shaders/base.fs.glsl")).useDelimiter("\\Z").next());
+			glCompileShader(fragment);
+			if (glGetShaderi(fragment, GL_COMPILE_STATUS) != 1) {
+				System.err.println(glGetShaderInfoLog(fragment));
+				return;
+			}
+			
+			baseShader = glCreateProgram();
+			glAttachShader(baseShader, vertex);
+			glAttachShader(baseShader, fragment);
+			glLinkProgram(baseShader);
+			if (glGetProgrami(baseShader, GL_LINK_STATUS) != 1) {
+				System.err.println(glGetProgramInfoLog(baseShader));
+				return;
+			}
+			glDeleteShader(vertex);
+			glDeleteShader(fragment);
+			glUseProgram(baseShader);
+			
+			projLoc = glGetUniformLocation(baseShader, "proj");
+			sprojLoc = glGetUniformLocation(baseShader, "sproj");
+			sundirLoc = glGetUniformLocation(baseShader, "sundir");
+			glUniform1i(glGetUniformLocation(baseShader, "shadow1"), 1);
+			glUniform1i(glGetUniformLocation(baseShader, "shadow2"), 2);
+			glUniform1i(glGetUniformLocation(baseShader, "shadow3"), 3);
+			glUniform1i(glGetUniformLocation(baseShader, "shadow4"), 4);
 		}
 		
-		int fragment = glCreateShader(GL_FRAGMENT_SHADER);
-		glShaderSource(fragment, new Scanner(GLHandler.class.getResourceAsStream("/res/shaders/base.fs.glsl")).useDelimiter("\\Z").next());
-		glCompileShader(fragment);
-		if (glGetShaderi(fragment, GL_COMPILE_STATUS) != 1) {
-			System.err.println(glGetShaderInfoLog(fragment));
-			return;
+		// Shadow Shader
+		{
+			int vertex = glCreateShader(GL_VERTEX_SHADER);
+			glShaderSource(vertex, new Scanner(GLHandler.class.getResourceAsStream("/res/shaders/shadow.vs.glsl")).useDelimiter("\\Z").next());
+			glCompileShader(vertex);
+			if (glGetShaderi(vertex, GL_COMPILE_STATUS) != 1) {
+				System.err.println(glGetShaderInfoLog(vertex));
+				return;
+			}
+			
+			int fragment = glCreateShader(GL_FRAGMENT_SHADER);
+			glShaderSource(fragment, new Scanner(GLHandler.class.getResourceAsStream("/res/shaders/shadow.fs.glsl")).useDelimiter("\\Z").next());
+			glCompileShader(fragment);
+			if (glGetShaderi(fragment, GL_COMPILE_STATUS) != 1) {
+				System.err.println(glGetShaderInfoLog(fragment));
+				return;
+			}
+			
+			shadowShader = glCreateProgram();
+			glAttachShader(shadowShader, vertex);
+			glAttachShader(shadowShader, fragment);
+			glLinkProgram(shadowShader);
+			
+			if (glGetProgrami(shadowShader, GL_LINK_STATUS) != 1) {
+				System.err.println(glGetProgramInfoLog(shadowShader));
+				return;
+			}
+			glDeleteShader(vertex);
+			glDeleteShader(fragment);
+			glUseProgram(shadowShader);
+			
+			shadowProjLoc = glGetUniformLocation(shadowShader, "proj");
 		}
 		
-		baseShader = glCreateProgram();
-		glAttachShader(baseShader, vertex);
-		glAttachShader(baseShader, fragment);
-		glLinkProgram(baseShader);
-		if (glGetProgrami(baseShader, GL_LINK_STATUS) != 1) {
-			System.err.println(glGetProgramInfoLog(baseShader));
-			return;
-		}
-		glDeleteShader(vertex);
-		glDeleteShader(fragment);
-		glUseProgram(baseShader);
-		
-		projLoc = glGetUniformLocation(baseShader, "proj");
-		sundirLoc = glGetUniformLocation(baseShader, "sundir");
-		
-		// Textures
+		// Block textures
 		blockTexture = glGenTextures();
 		glBindTexture(GL_TEXTURE_2D_ARRAY, blockTexture);
 		
@@ -149,10 +203,30 @@ public class GLHandler {
 		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		
+		// Shadowmaps
+		for (int i = 0; i < 4; i++) {
+			shadowTex[i] = glGenTextures();
+			glActiveTexture(GL_TEXTURE1+i);
+			glBindTexture(GL_TEXTURE_2D, shadowTex[i]);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, shadowmapSize, shadowmapSize, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		}
+		glActiveTexture(GL_TEXTURE0);
+		
+		fbo = glGenFramebuffers();
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+		glDrawBuffer(GL_NONE);
+		
 		// Enables
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
 		glFrontFace(GL_CW);
+		
+		// Other
+		clearDepth = je_malloc(4);
+		clearDepth.putFloat(0, 256);
 	}
 	
 	public static void clearTaps() {
@@ -179,5 +253,19 @@ public class GLHandler {
 			releaseMouse();
 		else
 			grabMouse();
+	}
+	
+	public static void prepareShadow(int phase) {
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+		glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadowTex[phase], 0);
+		glUseProgram(shadowShader);
+		glViewport(0,0,shadowmapSize,shadowmapSize);
+		glClearBufferfv(GL_DEPTH, 0, clearDepth);
+	}
+	
+	public static void prepareScene() {
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glUseProgram(baseShader);
+		glViewport(0,0,width,height);
 	}
 }

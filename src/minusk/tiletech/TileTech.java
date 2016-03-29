@@ -37,7 +37,6 @@ public class TileTech {
 		glfwSwapInterval(0);
 		
 		GLHandler.init(window);
-		
 		new World();
 		
 		ByteBuffer clearColor = je_malloc(20);
@@ -56,10 +55,15 @@ public class TileTech {
 			if (glfwWindowShouldClose(window) == 1)
 				break;
 			
+			int c = 0;
 			while (glfwGetTime() - time >= 0.05) {
 				time += 0.05;
 				World.getWorld().tick();
 				GLHandler.clearTaps();
+				if (c++ == 5) {
+					time = glfwGetTime();
+					break;
+				}
 			}
 			
 			glClearBufferfv(GL_COLOR, 0, clearColor);
@@ -69,7 +73,7 @@ public class TileTech {
 			
 			glfwSwapBuffers(window);
 			glfwPollEvents();
-//			System.out.println((glfwGetTime() - t) * 1000);
+			System.out.println((glfwGetTime() - t) * 1000);
 		}
 	}
 	

@@ -37,10 +37,10 @@ public class VerticalChunk {
 		gen = true;
 	}
 	
-	public void render(FrustumIntersection culler) {
+	public void render(FrustumIntersection culler, boolean shadowPass) {
 		for (int k = 0; k < 8; k++)
 			if (culler.testAab(x, k*32, z, x+32, k*32+32, z+32))
-				chunks[k].render();
+				chunks[k].render(shadowPass);
 	}
 	
 	public boolean isGened() {

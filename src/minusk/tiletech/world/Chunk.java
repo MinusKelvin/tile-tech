@@ -10,8 +10,7 @@ import static minusk.tiletech.utils.Util.*;
 import static org.lwjgl.glfw.GLFW.glfwGetTime;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
-import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
-import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
+import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.system.jemalloc.JEmalloc.je_malloc;
 import static org.lwjgl.system.jemalloc.JEmalloc.je_realloc;
 
@@ -111,7 +110,7 @@ public class Chunk {
 			System.out.println(verts + " verts: " + Math.round(t2*1000) + " ms "+x+","+y+","+z);
 	}
 	
-	void render() {
+	void render(boolean shadowPass) {
 		if (verts == 0)
 			return;
 		
@@ -119,14 +118,22 @@ public class Chunk {
 		
 		glVertexAttribPointer(0, 3, GL_FLOAT, false, 44, 0);
 		glVertexAttribPointer(1, 3, GL_FLOAT, false, 44, 12);
-		glVertexAttribPointer(2, 3, GL_FLOAT, false, 44, 24);
-		glVertexAttribPointer(3, 2, GL_UNSIGNED_SHORT, true, 44, 36);
-		glVertexAttribPointer(4, 4, GL_UNSIGNED_BYTE, true, 44, 40);
+		if (!shadowPass) {
+			glVertexAttribPointer(2, 3, GL_FLOAT, false, 44, 24);
+			glVertexAttribPointer(3, 2, GL_UNSIGNED_SHORT, true, 44, 36);
+			glVertexAttribPointer(4, 4, GL_UNSIGNED_BYTE, true, 44, 40);
+		}
 		glEnableVertexAttribArray(0);
 		glEnableVertexAttribArray(1);
-		glEnableVertexAttribArray(2);
-		glEnableVertexAttribArray(3);
-		glEnableVertexAttribArray(4);
+		if (shadowPass) {
+			glDisableVertexAttribArray(2);
+			glDisableVertexAttribArray(3);
+			glDisableVertexAttribArray(4);
+		} else {
+			glEnableVertexAttribArray(2);
+			glEnableVertexAttribArray(3);
+			glEnableVertexAttribArray(4);
+		}
 		
 		glDrawArrays(GL_TRIANGLES, 0, verts);
 	}
