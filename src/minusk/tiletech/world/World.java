@@ -19,6 +19,13 @@ import static org.lwjgl.opengl.GL20.glUniformMatrix4fv;
 import static org.lwjgl.system.jemalloc.JEmalloc.je_malloc;
 
 /**
+ * +Y = Up
+ * -Y = Down
+ * +X = West
+ * -X = East
+ * +Z = North
+ * -Z = South
+ * 
  * Created by MinusKelvin on 1/25/16.
  */
 public class World {
@@ -183,7 +190,7 @@ public class World {
 			GLHandler.prepareShadow(i);
 			shadowCam.setOrtho(-5*intpow(4,i), 5*intpow(4,i), -5*intpow(4,i), 5*intpow(4,i), 256, -256);
 			shadowCam.lookAlong(-0.440225f, 0.880451f, 0.17609f, 0, 1, 0);
-			shadowCam.translate(-eye.x, -eye.y, -eye.z);
+			shadowCam.translate(-Math.round(eye.x), -Math.round(eye.y), -Math.round(eye.z));
 			
 			shadowCam.get(matrixUpload);
 			glUniformMatrix4fv(GLHandler.getShadowProjLoc(), false, matrixUpload.asFloatBuffer());
@@ -196,7 +203,7 @@ public class World {
 		}
 		shadowCam.setOrtho(-5, 5, -5, 5, 256, -256);
 		shadowCam.lookAlong(-0.440225f, 0.880451f, 0.17609f, 0, 1, 0);
-		shadowCam.translate(-eye.x, -eye.y, -eye.z);
+		shadowCam.translate(-Math.round(eye.x), -Math.round(eye.y), -Math.round(eye.z));
 		shadowCam.get(matrixUpload);
 		
 		glCullFace(GL_BACK);
@@ -256,26 +263,26 @@ public class World {
 			if (Math.abs(dirx) > Math.abs(diry)) {
 				if (Math.abs(dirx) > Math.abs(dirz)) {
 					if (dx == 1)
-						result.side.west = true;
+						result.side.west = true; // if looking +X you see the -X face
 					else
-						result.side.east = true;
+						result.side.east = true; // if looking -X you see the +X face
 				} else {
 					if (dz == 1)
-						result.side.north = true;
+						result.side.north = true; // if looking +Z you see the -Z face
 					else
-						result.side.south = true;
+						result.side.south = true; // if looking -Z you see the +Z face
 				}
 			} else {
 				if (Math.abs(diry) > Math.abs(dirz)) {
-					if (dx == 1)
-						result.side.east = true;
+					if (dy == 1)
+						result.side.down = true; // if looking +Y you see the -Y face
 					else
-						result.side.west = true;
+						result.side.up = true; // if looking -Y you see the +Y face
 				} else {
 					if (dz == 1)
-						result.side.north = true;
+						result.side.north = true; // if looking +Z you see the -Z face
 					else
-						result.side.south = true;
+						result.side.south = true; // if looking -Z you see the +Z face
 				}
 			}
 			return result;
@@ -307,9 +314,9 @@ public class World {
 						RaytraceResult result = new RaytraceResult();
 						result.pos.set(cx, cy, cz);
 						if (dx == 1)
-							result.side.east = true;
+							result.side.west = true; // if looking +X you see the -X face
 						else
-							result.side.west = true;
+							result.side.east = true; // if looking -X you see the +X face
 						return result;
 					}
 					xchange = false;
@@ -319,9 +326,9 @@ public class World {
 						RaytraceResult result = new RaytraceResult();
 						result.pos.set(cx, cy, cz);
 						if (dy == 1)
-							result.side.down = true;
+							result.side.down = true; // if looking +Y you see the -Y face
 						else
-							result.side.up = true;
+							result.side.up = true; // if looking -Y you see the +Y face
 						return result;
 					}
 					ychange = false;
@@ -331,9 +338,9 @@ public class World {
 						RaytraceResult result = new RaytraceResult();
 						result.pos.set(cx, cy, cz);
 						if (dz == 1)
-							result.side.north = true;
+							result.side.north = true; // if looking +Z you see the -Z face
 						else
-							result.side.south = true;
+							result.side.south = true; // if looking -Z you see the +Z face
 						return result;
 					}
 					zchange = false;

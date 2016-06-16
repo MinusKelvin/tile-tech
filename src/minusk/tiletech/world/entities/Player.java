@@ -96,17 +96,17 @@ public class Player extends Entity {
 		
 		ByteBuffer buffer = je_calloc(44,36);
 		
-//		if (raytrace.side.up)
+		if (raytrace.side.up)
 			FaceRenderer.renderTopFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 6);
-//		else if (raytrace.side.down)
+		else if (raytrace.side.down)
 			FaceRenderer.renderBottomFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 6);
-//		else if (raytrace.side.west)
+		else if (raytrace.side.west)
 			FaceRenderer.renderWestFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 6);
-//		else if (raytrace.side.east)
+		else if (raytrace.side.east)
 			FaceRenderer.renderEastFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 6);
-//		else if (raytrace.side.north)
+		else if (raytrace.side.north)
 			FaceRenderer.renderNorthFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 6);
-//		else if (raytrace.side.south)
+		else if (raytrace.side.south)
 			FaceRenderer.renderSouthFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 6);
 		
 		buffer.position(0);

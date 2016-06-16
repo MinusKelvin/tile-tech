@@ -11,7 +11,18 @@ package minusk.tiletech.utils;
  * -Z = North
  */
 public class DirectionalBoolean {
-	public boolean up,down,north,south,east,west;
+	/** +Y */
+	public boolean up;
+	/** -Y */
+	public boolean down;
+	/** -Z */
+	public boolean north;
+	/** +Z */
+	public boolean south;
+	/** +X */
+	public boolean east;
+	/** -X */
+	public boolean west;
 	
 	public DirectionalBoolean(boolean init) {
 		up = init;
