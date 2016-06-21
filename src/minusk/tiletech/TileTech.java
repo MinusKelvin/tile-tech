@@ -1,5 +1,6 @@
 package minusk.tiletech;
 
+import minusk.tiletech.gui.Gui;
 import minusk.tiletech.render.GLHandler;
 import minusk.tiletech.world.World;
 import org.lwjgl.opengl.GL;
@@ -37,6 +38,7 @@ public class TileTech {
 		glfwSwapInterval(0);
 		
 		GLHandler.init(window);
+		Gui.init();
 		new World();
 		
 		ByteBuffer clearColor = je_malloc(20);
@@ -59,6 +61,7 @@ public class TileTech {
 			while (glfwGetTime() - time >= 0.05) {
 				time += 0.05;
 				World.getWorld().tick();
+				Gui.tick();
 				GLHandler.clearTaps();
 				if (c++ == 5) {
 					time = glfwGetTime();
@@ -70,10 +73,11 @@ public class TileTech {
 			glClearBufferfv(GL_DEPTH, 0, clearDepth);
 			
 			World.getWorld().renderWorld((float) ((glfwGetTime()-time) / 0.05));
+			Gui.render();
 			
 			glfwSwapBuffers(window);
 			glfwPollEvents();
-			System.out.println((glfwGetTime() - t) * 1000);
+//			System.out.println((glfwGetTime() - t) * 1000);
 		}
 	}
 	

@@ -1,5 +1,6 @@
 package minusk.tiletech.render;
 
+import minusk.tiletech.gui.Gui;
 import minusk.tiletech.world.World;
 import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFWCursorPosCallback;
@@ -29,7 +30,8 @@ import static org.lwjgl.system.jemalloc.JEmalloc.je_malloc;
  */
 public class GLHandler {
 	private static int[] shadowTex = new int[4];
-	private static int fbo, blockTexture, baseShader, shadowShader, shadowProjLoc, sprojLoc, projLoc, sundirLoc;
+	private static int fbo, blockTexture, baseShader, shadowShader, shadowProjLoc, sprojLoc, projLoc, sundirLoc,
+			guiShader, guiProjLoc, guiTex;
 	private static int width=1024, height=576, shadowmapSize=1024;
 	public static final Matrix4f projection = new Matrix4f().setPerspective((float) Math.toRadians(90), 1024/576f, 0.1f, 1512);
 	private static GLFWFramebufferSizeCallback fbs;
@@ -38,7 +40,6 @@ public class GLHandler {
 	private static GLFWMouseButtonCallback mb;
 	private static ByteBuffer clearDepth;
 	private static long window;
-	private static boolean grabbed;
 	private static boolean[] taps = new boolean[GLFW_KEY_LAST+1], mTaps = new boolean[GLFW_MOUSE_BUTTON_LAST+1];
 	
 	public static int getProjLoc() {
@@ -83,7 +84,7 @@ public class GLHandler {
 		}));
 		
 		glfwSetCursorPosCallback(window, cp = GLFWCursorPosCallback.create((win, x, y) -> {
-			if (grabbed) {
+			if (Gui.isGrabbed()) {
 				World.getWorld().player.turn((float) x * 0.01f, (float) y * 0.01f);
 				glfwSetCursorPos(window, 0, 0);
 			}
@@ -239,20 +240,11 @@ public class GLHandler {
 	public static void grabMouse() {
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		glfwSetCursorPos(window, 0, 0);
-		grabbed = true;
 	}
 	
 	public static void releaseMouse() {
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 		glfwSetCursorPos(window, width/2, height/2);
-		grabbed = false;
-	}
-	
-	public static void toggleMouse() {
-		if (grabbed)
-			releaseMouse();
-		else
-			grabMouse();
 	}
 	
 	public static void prepareShadow(int phase) {
@@ -267,5 +259,9 @@ public class GLHandler {
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glUseProgram(baseShader);
 		glViewport(0,0,width,height);
+	}
+	
+	public static void prepareGUI() {
+		
 	}
 }

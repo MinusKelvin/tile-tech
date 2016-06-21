@@ -73,9 +73,6 @@ public class Player extends Entity {
 		if (collides.down && GLHandler.getKey(GLFW_KEY_SPACE))
 			velocity.y = 0.7f;
 		
-		if (GLHandler.getTap(GLFW_KEY_ESCAPE))
-			GLHandler.toggleMouse();
-		
 		Vector3f eye = getEye(1);
 		raytrace = World.getWorld().raytrace(eye.x, eye.y, eye.z, dimension, look.x, look.y, look.z, 4);
 		if (raytrace == null) {
