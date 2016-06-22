@@ -19,7 +19,8 @@ import static org.lwjgl.system.jemalloc.JEmalloc.je_realloc;
  */
 public class Chunk {
 	// Note: All of these block arrays are [x][z][y]
-	int[][][] blockIDs = new int[32][32][32];
+	short[][][] blockIDs = new short[32][32][32];
+	int[][][] light = new int[32][32][32];
 	HashMap<Vector3i, Object> blockMeta = new HashMap<>(32);
 	private int vbo = -1, verts, x,y,z,dim;
 	boolean needsUpdate = false;
@@ -49,7 +50,7 @@ public class Chunk {
 		for (int i = 0; i < 32; i++) {
 			for (int j = 0; j < 32; j++) {
 				for (int k = 0; k < 32; k++)
-					chunkEdges[i + 1][j + 1][k + 1] = Tile.TILES[blockIDs[i][j][k]];
+					chunkEdges[i + 1][j + 1][k + 1] = Tile.getTile(blockIDs[i][j][k]);
 				chunkEdges[i+1][j+1][0] = World.getWorld().getTile(x+i,y-1,z+j,dim);
 				chunkEdges[i+1][j+1][33] = World.getWorld().getTile(x+i,y+32,z+j,dim);
 				chunkEdges[0][j+1][i+1] = World.getWorld().getTile(x-1,y+i,z+j,dim);
@@ -138,12 +139,12 @@ public class Chunk {
 		glDrawArrays(GL_TRIANGLES, 0, verts);
 	}
 	
-	public void setTile(int x, int y, int z, int id) {
+	public void setTile(int x, int y, int z, short id) {
 		System.out.println("Setblock: " + (this.x+x) + ", " + (this.y+y) + ", " + (this.z+z) + " old: " + blockIDs[x][z][y]);
-		Tile.TILES[blockIDs[x][z][y]].onDelete(x+this.x, y+this.y, z+this.z, dim);
+		Tile.getTile(blockIDs[x][z][y]).onDelete(x+this.x, y+this.y, z+this.z, dim);
 		blockIDs[x][z][y] = id;
 		blockMeta.remove(new Vector3i(x,y,z));
-		Tile.TILES[id].onCreate(x+this.x, y+this.y, z+this.z, dim);
+		Tile.getTile(id).onCreate(x+this.x, y+this.y, z+this.z, dim);
 		for (int i = -1; i < 2; i++)
 			for (int j = -1; j < 2; j++)
 				for (int k = -1; k < 2; k++)

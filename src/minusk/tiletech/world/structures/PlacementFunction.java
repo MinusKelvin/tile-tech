@@ -6,8 +6,8 @@ import minusk.tiletech.world.Tile;
  * Created by MinusKelvin on 2/14/16.
  */
 public interface PlacementFunction {
-	boolean limitedReplace(int x, int y, int z, int dim, int[] canReplace, int replaceWith);
+	boolean limitedReplace(int x, int y, int z, int dim, short[] canReplace, short replaceWith);
 	Tile getTile(int x, int y, int z, int dim);
 	
-	int[] airMask = new int[] {Tile.Air.id};
+	short[] airMask = new short[] {Tile.Air.id};
 }

@@ -77,13 +77,13 @@ public class World {
 	
 	public Tile getTile(int x, int y, int z, int dim) {
 		if (y < 0)
-			return Tile.TILES[5];
+			return Tile.getTile((short) 5);
 		else if (y >= 256)
-			return Tile.TILES[0];
+			return Tile.getTile((short) 0);
 		else if (!world.containsKey(index2a.set(getCnk(x), getCnk(z))))
-			return Tile.TILES[5];
+			return Tile.getTile((short) 5);
 		else
-			return Tile.TILES[world.get(index2a).chunks[getCnk(y)].blockIDs[cnkIdx(x)][cnkIdx(z)][cnkIdx(y)]];
+			return Tile.getTile(world.get(index2a).chunks[getCnk(y)].blockIDs[cnkIdx(x)][cnkIdx(z)][cnkIdx(y)]);
 	}
 	
 	public Object getMeta(int x, int y, int z, int dim) {
@@ -100,23 +100,23 @@ public class World {
 		return world.get(index2a).chunks[y];
 	}
 	
-	public void setTile(int x, int y, int z, int dim, int id) {
+	public void setTile(int x, int y, int z, int dim, short id) {
 		Chunk chunk = getChunk(getCnk(x), getCnk(y), getCnk(z), dim);
 		chunk.setTile(cnkIdx(x),cnkIdx(y),cnkIdx(z),id);
 	}
 	
 	public Tile genGetTile(int x, int y, int z, int dim) {
 		if (y < 0)
-			return Tile.TILES[5];
+			return Tile.getTile((short) 5);
 		else if (y >= 256)
-			return Tile.TILES[0];
+			return Tile.getTile((short) 0);
 		else if (!world.containsKey(index2b.set(getCnk(x), getCnk(z))))
-			return Tile.TILES[5];
+			return Tile.getTile((short) 5);
 		else
-			return Tile.TILES[world.get(index2b).chunks[getCnk(y)].blockIDs[cnkIdx(x)][cnkIdx(z)][cnkIdx(y)]];
+			return Tile.getTile(world.get(index2b).chunks[getCnk(y)].blockIDs[cnkIdx(x)][cnkIdx(z)][cnkIdx(y)]);
 	}
 	
-	public boolean genLimitedReplace(int x, int y, int z, int dim, int[] canReplace, int id) {
+	public boolean genLimitedReplace(int x, int y, int z, int dim, short[] canReplace, short id) {
 		if (!world.containsKey(index2b.set(getCnk(x),getCnk(z))))
 			rawGenerateChunk(getCnk(x),getCnk(z),dim);
 		Chunk chunk = world.get(index2b.set(getCnk(x),getCnk(z))).chunks[getCnk(y)];

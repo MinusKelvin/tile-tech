@@ -15,7 +15,7 @@ import static minusk.tiletech.utils.Util.*;
 public abstract class StandardTile extends Tile {
 	protected int top, bottom, east, west, north, south;
 	
-	public StandardTile(int id, int top, int bottom, int east, int west, int north, int south) {
+	public StandardTile(short id, int top, int bottom, int east, int west, int north, int south) {
 		super(id);
 		this.top = top;
 		this.bottom = bottom;

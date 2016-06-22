@@ -7,7 +7,7 @@ import org.joml.RayAabIntersection;
  * Created by MinusKelvin on 2/5/16.
  */
 public class StandardEmptyTile extends StandardTransparentTile {
-	public StandardEmptyTile(int id, int top, int bottom, int east, int west, int north, int south) {
+	public StandardEmptyTile(short id, int top, int bottom, int east, int west, int north, int south) {
 		super(id, top, bottom, east, west, north, south);
 	}
 	

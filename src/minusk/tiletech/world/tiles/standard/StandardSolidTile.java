@@ -6,7 +6,7 @@ import minusk.tiletech.world.entities.Entity;
  * Created by MinusKelvin on 2/4/16.
  */
 public class StandardSolidTile extends StandardTile {
-	public StandardSolidTile(int id, int top, int bottom, int east, int west, int north, int south) {
+	public StandardSolidTile(short id, int top, int bottom, int east, int west, int north, int south) {
 		super(id, top, bottom, east, west, north, south);
 	}
 	

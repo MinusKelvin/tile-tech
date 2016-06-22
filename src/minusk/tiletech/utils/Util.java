@@ -12,7 +12,7 @@ public class Util {
 		return xyz < 0 ? (xyz-31) / 32 : xyz / 32;
 	}
 	
-	public static boolean contains(int v, int[] a) {
+	public static boolean contains(short v, short[] a) {
 		for (int c : a)
 			if (v == c)
 				return true;

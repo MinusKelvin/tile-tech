@@ -8,7 +8,7 @@ import minusk.tiletech.world.World;
  */
 public class Trees {
 	private static boolean createMaple(PlacementFunction place, int x, int y, int z, int dim) {
-		if (!place.limitedReplace(x,y,z,dim,new int[] {Tile.Grass.id, Tile.Dirt.id}, Tile.Dirt.id))
+		if (!place.limitedReplace(x,y,z,dim,new short[] {Tile.Grass.id, Tile.Dirt.id}, Tile.Dirt.id))
 			return false;
 		
 		int height = World.getWorld().random(5,7);
@@ -34,7 +34,7 @@ public class Trees {
 	
 	public static boolean genMapleTree(int x, int y, int z, int dim) {
 		return createMaple(new PlacementFunction() {
-			@Override public boolean limitedReplace(int x, int y, int z, int dim, int[] canReplace, int replaceWith) {
+			@Override public boolean limitedReplace(int x, int y, int z, int dim, short[] canReplace, short replaceWith) {
 				return World.getWorld().genLimitedReplace(x,y,z,dim,canReplace,replaceWith);
 			}
 			@Override public Tile getTile(int x, int y, int z, int dim) {

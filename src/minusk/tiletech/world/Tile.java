@@ -12,23 +12,27 @@ import java.nio.ByteBuffer;
  * Created by MinusKelvin on 1/25/16.
  */
 public abstract class Tile {
-	public static final Tile[] TILES = new Tile[1024];
+	private static final Tile[] TILES = new Tile[1024];
 	
-	public static final Tile Air = new StandardEmptyTile(0,0,0,0,0,0,0) {
+	public static final Tile Air = new StandardEmptyTile((short) 0,0,0,0,0,0,0) {
 		@Override public int render(Tile[][][] c, ByteBuffer v, int l, int x, int y, int z, int d) {return 0;}
 	};
-	public static final Tile Grass = new StandardSolidTile(1,2, 0, 1, 1, 1, 1);
-	public static final Tile Dirt = new StandardSolidTile(2,0, 0, 0, 0, 0, 0);
-	public static final Tile Maple_Log = new StandardSolidTile(3,4, 4, 3, 3, 3, 3);
-	public static final Tile Maple_Leaves = new StandardTransparentTile(4,5, 5, 5, 5, 5, 5);
-	public static final Tile Bedrock = new StandardSolidTile(5,6,6,6,6,6,6);
+	public static final Tile Grass = new StandardSolidTile((short) 1,2, 0, 1, 1, 1, 1);
+	public static final Tile Dirt = new StandardSolidTile((short) 2,0, 0, 0, 0, 0, 0);
+	public static final Tile Maple_Log = new StandardSolidTile((short) 3,4, 4, 3, 3, 3, 3);
+	public static final Tile Maple_Leaves = new StandardTransparentTile((short) 4,5, 5, 5, 5, 5, 5);
+	public static final Tile Bedrock = new StandardSolidTile((short) 5,6,6,6,6,6,6);
 	
-	public final int id;
-	public Tile(int id) {
+	public static Tile getTile(short id) {
+		return TILES[id & 0xFFFF];
+	}
+	
+	public final short id;
+	public Tile(short id) {
 		this.id = id;
-		if (TILES[id] != null)
-			System.err.println("Overwriting " + TILES[id] + " with " + this + " at id " + id);
-		TILES[id] = this;
+		if (getTile(id) != null)
+			System.err.println("Overwriting " + getTile(id) + " with " + this + " at id " + (id & 0xFFFF));
+		TILES[id & 0xFFFF] = this;
 	}
 	
 	public abstract boolean isTransparentTop(int x, int y, int z, int dim);
