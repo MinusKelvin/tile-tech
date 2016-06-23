@@ -31,6 +31,16 @@ import static org.lwjgl.system.jemalloc.JEmalloc.je_malloc;
 public class World {
 	private static World currentWorld;
 	
+	// Yes, my lighting system is weird as heck
+	public static final int LIGHT_WHITE = 0;
+	public static final int LIGHT_CYAN = 1;
+	public static final int LIGHT_MAGENTA = 2;
+	public static final int LIGHT_YELLOW = 3;
+	public static final int LIGHT_BLUE = 4;
+	public static final int LIGHT_GREEN = 5;
+	public static final int LIGHT_RED = 6;
+	public static final int LIGHT_SUN = 7;
+	
 	public final Player player = new Player();
 	public final OpenSimplexNoise noise2Da = new OpenSimplexNoise(System.currentTimeMillis());
 	public final OpenSimplexNoise noise2Db = new OpenSimplexNoise(System.currentTimeMillis()*31);
@@ -69,8 +79,8 @@ public class World {
 		worldGenThread.setName("World Generation Thread");
 		worldGenThread.setPriority(Thread.MIN_PRIORITY);
 		worldGenThread.start();
-		for (int i = -16; i <= 16; i++)
-			for (int j = -16; j <= 16; j++)
+		for (int i = -12/*16*/; i <= 12/*16*/; i++)
+			for (int j = -12/*16*/; j <= 12/*16*/; j++)
 				if (i < -4 || i > 4 || j < -4 || j > 4)
 					generatePoints.add(new Vector3i(i,j,0));
 	}
@@ -84,6 +94,11 @@ public class World {
 			return Tile.getTile((short) 5);
 		else
 			return Tile.getTile(world.get(index2a).chunks[getCnk(y)].blockIDs[cnkIdx(x)][cnkIdx(z)][cnkIdx(y)]);
+	}
+	
+	public int getLight(int x, int y, int z, int dim, int channel) {
+		Chunk chunk = getChunk(getCnk(x), getCnk(y), getCnk(z), dim);
+		return chunk.getLight(cnkIdx(x),cnkIdx(y),cnkIdx(z), channel);
 	}
 	
 	public Object getMeta(int x, int y, int z, int dim) {
@@ -103,6 +118,11 @@ public class World {
 	public void setTile(int x, int y, int z, int dim, short id) {
 		Chunk chunk = getChunk(getCnk(x), getCnk(y), getCnk(z), dim);
 		chunk.setTile(cnkIdx(x),cnkIdx(y),cnkIdx(z),id);
+	}
+	
+	public void setLight(int x, int y, int z, int dim, int channel, int amount) {
+		Chunk chunk = getChunk(getCnk(x), getCnk(y), getCnk(z), dim);
+		chunk.setLight(cnkIdx(x),cnkIdx(y),cnkIdx(z), channel, amount);
 	}
 	
 	public Tile genGetTile(int x, int y, int z, int dim) {
@@ -146,7 +166,6 @@ public class World {
 	public void tick() {
 		player.update();
 		
-		int c = 0;
 		Vector3i[] closest = new Vector3i[8];
 		int[] distances = new int[8];
 		outer:

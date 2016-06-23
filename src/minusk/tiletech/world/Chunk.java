@@ -20,6 +20,7 @@ import static org.lwjgl.system.jemalloc.JEmalloc.je_realloc;
 public class Chunk {
 	// Note: All of these block arrays are [x][z][y]
 	short[][][] blockIDs = new short[32][32][32];
+	// SSSS RRRR GGGG BBBB YYYY MMMM CCCC WWWW
 	int[][][] light = new int[32][32][32];
 	HashMap<Vector3i, Object> blockMeta = new HashMap<>(32);
 	private int vbo = -1, verts, x,y,z,dim;
@@ -117,21 +118,26 @@ public class Chunk {
 		
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		
-		glVertexAttribPointer(0, 3, GL_FLOAT, false, 44, 0);
-		glVertexAttribPointer(1, 3, GL_FLOAT, false, 44, 12);
-		if (!shadowPass) {
-			glVertexAttribPointer(2, 3, GL_FLOAT, false, 44, 24);
-			glVertexAttribPointer(3, 2, GL_UNSIGNED_SHORT, true, 44, 36);
-			glVertexAttribPointer(4, 4, GL_UNSIGNED_BYTE, true, 44, 40);
+		glVertexAttribPointer(0, 3, GL_FLOAT, false, 44, 0); // Position
+		glVertexAttribPointer(1, 3, GL_FLOAT, false, 44, 12); // Texture coordinates
+		if (shadowPass) {
+			glVertexAttribPointer(2, 1, GL_UNSIGNED_BYTE, true, 44, 38); // Wavy
+		} else {
+			glVertexAttribPointer(2, 3, GL_FLOAT, false, 44, 24); // Normals
+			glVertexAttribPointer(3, 3, GL_UNSIGNED_BYTE, true, 44, 36); // Quad interop + wavy factor
+			glVertexAttribPointer(4, 4, GL_UNSIGNED_BYTE, true, 44, 40); // Ambient occlusion
+//			glVertexAttribPointer(5, 4, GL_UNSIGNED_BYTE, true, 60, 44); // Color v0
+//			glVertexAttribPointer(6, 4, GL_UNSIGNED_BYTE, true, 60, 48); // Color v1
+//			glVertexAttribPointer(7, 4, GL_UNSIGNED_BYTE, true, 60, 52); // Color v2
+//			glVertexAttribPointer(8, 4, GL_UNSIGNED_BYTE, true, 60, 56); // Color v3
 		}
 		glEnableVertexAttribArray(0);
 		glEnableVertexAttribArray(1);
+		glEnableVertexAttribArray(2);
 		if (shadowPass) {
-			glDisableVertexAttribArray(2);
 			glDisableVertexAttribArray(3);
 			glDisableVertexAttribArray(4);
 		} else {
-			glEnableVertexAttribArray(2);
 			glEnableVertexAttribArray(3);
 			glEnableVertexAttribArray(4);
 		}
@@ -149,5 +155,13 @@ public class Chunk {
 			for (int j = -1; j < 2; j++)
 				for (int k = -1; k < 2; k++)
 					World.getWorld().requestChunkRender(i+getCnk(x+this.x), k+getCnk(y+this.y), j+getCnk(z+this.z), dim);
+	}
+	
+	public int getLight(int x, int y, int z, int channel) {
+		return light[x][z][y] >> channel*4 & 0xF;
+	}
+	
+	public void setLight(int x, int y, int z, int channel, int amount) {
+		light[x][z][y] = (light[x][z][y] & (0xF << channel*4)) | (0xF & amount) << channel*4;
 	}
 }

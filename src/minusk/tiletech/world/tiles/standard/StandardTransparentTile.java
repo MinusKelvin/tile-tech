@@ -4,8 +4,8 @@ package minusk.tiletech.world.tiles.standard;
  * Created by MinusKelvin on 2/4/16.
  */
 public class StandardTransparentTile extends StandardSolidTile {
-	public StandardTransparentTile(short id, int top, int bottom, int east, int west, int north, int south) {
-		super(id, top, bottom, east, west, north, south);
+	public StandardTransparentTile(short id, int top, int bottom, int east, int west, int north, int south, float wavy) {
+		super(id, top, bottom, east, west, north, south, wavy);
 	}
 	
 	@Override

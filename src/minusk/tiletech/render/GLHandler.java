@@ -29,7 +29,8 @@ import static org.lwjgl.system.jemalloc.JEmalloc.je_malloc;
  */
 public class GLHandler {
 	private static int[] shadowTex = new int[4];
-	private static int fbo, blockTexture, baseShader, shadowShader, shadowProjLoc, sprojLoc, projLoc, sundirLoc;
+	private static int fbo, blockTexture, baseShader, shadowShader,
+			shadowProjLoc, sprojLoc, projLoc, sundirLoc, timeLoc, shadowTimeLoc;
 	private static int width=1024, height=576, shadowmapSize=1024;
 	public static final Matrix4f projection = new Matrix4f().setPerspective((float) Math.toRadians(90), 1024/576f, 0.1f, 1512);
 	private static GLFWFramebufferSizeCallback fbs;
@@ -38,7 +39,8 @@ public class GLHandler {
 	private static GLFWMouseButtonCallback mb;
 	private static ByteBuffer clearDepth;
 	private static long window;
-	private static boolean grabbed;
+	private static float time;
+	private static boolean grabbed, newtime = true;
 	private static boolean[] taps = new boolean[GLFW_KEY_LAST+1], mTaps = new boolean[GLFW_MOUSE_BUTTON_LAST+1];
 	
 	public static int getProjLoc() {
@@ -134,6 +136,7 @@ public class GLHandler {
 			projLoc = glGetUniformLocation(baseShader, "proj");
 			sprojLoc = glGetUniformLocation(baseShader, "sproj");
 			sundirLoc = glGetUniformLocation(baseShader, "sundir");
+			timeLoc = glGetUniformLocation(baseShader, "time");
 			glUniform1i(glGetUniformLocation(baseShader, "shadow1"), 1);
 			glUniform1i(glGetUniformLocation(baseShader, "shadow2"), 2);
 			glUniform1i(glGetUniformLocation(baseShader, "shadow3"), 3);
@@ -172,6 +175,7 @@ public class GLHandler {
 			glUseProgram(shadowShader);
 			
 			shadowProjLoc = glGetUniformLocation(shadowShader, "proj");
+			shadowTimeLoc = glGetUniformLocation(shadowShader, "time");
 		}
 		
 		// Block textures
@@ -256,16 +260,22 @@ public class GLHandler {
 	}
 	
 	public static void prepareShadow(int phase) {
+		if (newtime)
+			time = (float) glfwGetTime();
+		newtime = false;
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 		glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadowTex[phase], 0);
 		glUseProgram(shadowShader);
 		glViewport(0,0,shadowmapSize,shadowmapSize);
 		glClearBufferfv(GL_DEPTH, 0, clearDepth);
+		glUniform1f(shadowTimeLoc, time);
 	}
 	
 	public static void prepareScene() {
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glUseProgram(baseShader);
 		glViewport(0,0,width,height);
+		glUniform1f(timeLoc, time);
+		newtime = true;
 	}
 }

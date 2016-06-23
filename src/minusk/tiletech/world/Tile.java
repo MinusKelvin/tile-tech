@@ -14,14 +14,14 @@ import java.nio.ByteBuffer;
 public abstract class Tile {
 	private static final Tile[] TILES = new Tile[1024];
 	
-	public static final Tile Air = new StandardEmptyTile((short) 0,0,0,0,0,0,0) {
+	public static final Tile Air = new StandardEmptyTile((short) 0,0,0,0,0,0,0,0) {
 		@Override public int render(Tile[][][] c, ByteBuffer v, int l, int x, int y, int z, int d) {return 0;}
 	};
-	public static final Tile Grass = new StandardSolidTile((short) 1,2, 0, 1, 1, 1, 1);
-	public static final Tile Dirt = new StandardSolidTile((short) 2,0, 0, 0, 0, 0, 0);
-	public static final Tile Maple_Log = new StandardSolidTile((short) 3,4, 4, 3, 3, 3, 3);
-	public static final Tile Maple_Leaves = new StandardTransparentTile((short) 4,5, 5, 5, 5, 5, 5);
-	public static final Tile Bedrock = new StandardSolidTile((short) 5,6,6,6,6,6,6);
+	public static final Tile Grass = new StandardSolidTile((short) 1,2, 0, 1, 1, 1, 1, 0);
+	public static final Tile Dirt = new StandardSolidTile((short) 2,0, 0, 0, 0, 0, 0, 0);
+	public static final Tile Maple_Log = new StandardSolidTile((short) 3,4, 4, 3, 3, 3, 3, 0);
+	public static final Tile Maple_Leaves = new StandardTransparentTile((short) 4,5, 5, 5, 5, 5, 5, 0.5f);
+	public static final Tile Bedrock = new StandardSolidTile((short) 5,6,6,6,6,6,6,0);
 	
 	public static Tile getTile(short id) {
 		return TILES[id & 0xFFFF];

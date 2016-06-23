@@ -14,8 +14,9 @@ import static minusk.tiletech.utils.Util.*;
  */
 public abstract class StandardTile extends Tile {
 	protected int top, bottom, east, west, north, south;
+	protected float wavy;
 	
-	public StandardTile(short id, int top, int bottom, int east, int west, int north, int south) {
+	public StandardTile(short id, int top, int bottom, int east, int west, int north, int south, float wavy) {
 		super(id);
 		this.top = top;
 		this.bottom = bottom;
@@ -23,6 +24,7 @@ public abstract class StandardTile extends Tile {
 		this.west = west;
 		this.north = north;
 		this.south = south;
+		this.wavy = wavy;
 	}
 	
 	private static Tile[][][] blocks = new Tile[3][3][3];
@@ -58,7 +60,7 @@ public abstract class StandardTile extends Tile {
 			if (blocks[0][0][2].contributesAO(x-1,y+1,z-1,dim))
 				aoBits |= 128;
 			
-			verts += renderNorthFace(vertices, aoBits, x, y, z, north);
+			verts += renderNorthFace(vertices, aoBits, x, y, z, north, wavy);
 		}
 		
 		if (blocks[1][2][1].isTransparentNorth(x,y,z+1,dim)) {
@@ -81,7 +83,7 @@ public abstract class StandardTile extends Tile {
 			if (blocks[2][2][2].contributesAO(x+1,y+1,z+1,dim))
 				aoBits |= 128;
 			
-			verts += renderSouthFace(vertices, aoBits, x, y, z, south);
+			verts += renderSouthFace(vertices, aoBits, x, y, z, south, wavy);
 		}
 		
 		if (blocks[0][1][1].isTransparentEast(x-1,y,z,dim)) {
@@ -104,7 +106,7 @@ public abstract class StandardTile extends Tile {
 			if (blocks[0][2][2].contributesAO(x-1,y+1,z+1,dim))
 				aoBits |= 128;
 			
-			verts += renderWestFace(vertices, aoBits, x, y, z, west);
+			verts += renderWestFace(vertices, aoBits, x, y, z, west, wavy);
 		}
 		
 		if (blocks[2][1][1].isTransparentWest(x+1,y,z,dim)) {
@@ -127,7 +129,7 @@ public abstract class StandardTile extends Tile {
 			if (blocks[2][0][2].contributesAO(x+1,y+1,z-1,dim))
 				aoBits |= 128;
 			
-			verts += renderEastFace(vertices, aoBits, x, y, z, east);
+			verts += renderEastFace(vertices, aoBits, x, y, z, east, wavy);
 		}
 		
 		if (blocks[1][1][0].isTransparentTop(x,y-1,z,dim)) {
@@ -150,7 +152,7 @@ public abstract class StandardTile extends Tile {
 			if (blocks[0][0][0].contributesAO(x+1,y-1,z+1,dim))
 				aoBits |= 128;
 			
-			verts += renderBottomFace(vertices, aoBits, x, y, z, bottom);
+			verts += renderBottomFace(vertices, aoBits, x, y, z, bottom, wavy);
 		}
 		
 		if (blocks[1][1][2].isTransparentBottom(x,y+1,z,dim)) {
@@ -173,7 +175,7 @@ public abstract class StandardTile extends Tile {
 			if (blocks[0][2][2].contributesAO(x-1,y+1,z+1,dim))
 				aoBits |= 128;
 			
-			verts += renderTopFace(vertices, aoBits, x, y, z, top);
+			verts += renderTopFace(vertices, aoBits, x, y, z, top, wavy);
 		}
 		
 		return verts;
