@@ -19,9 +19,9 @@ import static org.lwjgl.system.jemalloc.JEmalloc.je_realloc;
  */
 public class Chunk {
 	// Note: All of these block arrays are [x][z][y]
-	short[][][] blockIDs = new short[32][32][32];
+	short[][][] blockIDs;
 	// SSSS RRRR GGGG BBBB YYYY MMMM CCCC WWWW
-	int[][][] light = new int[32][32][32];
+	int[][][] light;
 	HashMap<Vector3i, Object> blockMeta = new HashMap<>(32);
 	private int vbo = -1, verts, x,y,z,dim;
 	boolean needsUpdate = false;
@@ -32,10 +32,17 @@ public class Chunk {
 		this.z = z;
 		this.dim = dim;
 		
-		for (int i = 0; i < 32; i++)
-			for (int j = 0; j < 32; j++)
-				for (int k = 0; k < 32; k++)
-					blockIDs[i][j][k] = k+y > hs[i][j] ? Tile.Air.id : k+y < hs[i][j] ? Tile.Dirt.id : Tile.Grass.id;
+		for (int i = 0; i < 32; i++) {
+			for (int j = 0; j < 32; j++) {
+				for (int k = 0; k < 32; k++) {
+					if (k + y <= hs[i][j]) {
+						if (blockIDs == null)
+							blockIDs = new short[32][32][32];
+						blockIDs[i][j][k] = k + y < hs[i][j] ? Tile.Dirt.id : Tile.Grass.id;
+					}
+				}
+			}
+		}
 	}
 	
 	private static int maxVerts = 1024;
@@ -51,7 +58,7 @@ public class Chunk {
 		for (int i = 0; i < 32; i++) {
 			for (int j = 0; j < 32; j++) {
 				for (int k = 0; k < 32; k++)
-					chunkEdges[i + 1][j + 1][k + 1] = Tile.getTile(blockIDs[i][j][k]);
+					chunkEdges[i + 1][j + 1][k + 1] = Tile.getTile(getTile(i,k,j));
 				chunkEdges[i+1][j+1][0] = World.getWorld().getTile(x+i,y-1,z+j,dim);
 				chunkEdges[i+1][j+1][33] = World.getWorld().getTile(x+i,y+32,z+j,dim);
 				chunkEdges[0][j+1][i+1] = World.getWorld().getTile(x-1,y+i,z+j,dim);
@@ -146,7 +153,8 @@ public class Chunk {
 	}
 	
 	public void setTile(int x, int y, int z, short id) {
-		System.out.println("Setblock: " + (this.x+x) + ", " + (this.y+y) + ", " + (this.z+z) + " old: " + blockIDs[x][z][y]);
+		if (blockIDs == null)
+			blockIDs = new short[32][32][32];
 		Tile.getTile(blockIDs[x][z][y]).onDelete(x+this.x, y+this.y, z+this.z, dim);
 		blockIDs[x][z][y] = id;
 		blockMeta.remove(new Vector3i(x,y,z));
@@ -157,11 +165,27 @@ public class Chunk {
 					World.getWorld().requestChunkRender(i+getCnk(x+this.x), k+getCnk(y+this.y), j+getCnk(z+this.z), dim);
 	}
 	
+	public short getTile(int x, int y, int z) {
+		if (blockIDs == null)
+			return 0;
+		return blockIDs[x][z][y];
+	}
+	
+	public void rawSetTile(int x, int y, int z, short id) {
+		if (blockIDs == null)
+			blockIDs = new short[32][32][32];
+		blockIDs[x][z][y] = id;
+	}
+	
 	public int getLight(int x, int y, int z, int channel) {
+		if (light == null)
+			return 0;
 		return light[x][z][y] >> channel*4 & 0xF;
 	}
 	
 	public void setLight(int x, int y, int z, int channel, int amount) {
+		if (light == null)
+			light = new int[32][32][32];
 		light[x][z][y] = (light[x][z][y] & (0xF << channel*4)) | (0xF & amount) << channel*4;
 	}
 }

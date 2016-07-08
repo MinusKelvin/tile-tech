@@ -93,7 +93,7 @@ public class World {
 		else if (!world.containsKey(index2a.set(getCnk(x), getCnk(z))))
 			return Tile.getTile((short) 5);
 		else
-			return Tile.getTile(world.get(index2a).chunks[getCnk(y)].blockIDs[cnkIdx(x)][cnkIdx(z)][cnkIdx(y)]);
+			return Tile.getTile(world.get(index2a).chunks[getCnk(y)].getTile(cnkIdx(x),cnkIdx(y),cnkIdx(z)));
 	}
 	
 	public int getLight(int x, int y, int z, int dim, int channel) {
@@ -133,15 +133,15 @@ public class World {
 		else if (!world.containsKey(index2b.set(getCnk(x), getCnk(z))))
 			return Tile.getTile((short) 5);
 		else
-			return Tile.getTile(world.get(index2b).chunks[getCnk(y)].blockIDs[cnkIdx(x)][cnkIdx(z)][cnkIdx(y)]);
+			return Tile.getTile(world.get(index2b).chunks[getCnk(y)].getTile(cnkIdx(x),cnkIdx(y),cnkIdx(z)));
 	}
 	
 	public boolean genLimitedReplace(int x, int y, int z, int dim, short[] canReplace, short id) {
 		if (!world.containsKey(index2b.set(getCnk(x),getCnk(z))))
 			rawGenerateChunk(getCnk(x),getCnk(z),dim);
 		Chunk chunk = world.get(index2b.set(getCnk(x),getCnk(z))).chunks[getCnk(y)];
-		if (contains(chunk.blockIDs[cnkIdx(x)][cnkIdx(z)][cnkIdx(y)], canReplace)) {
-			chunk.blockIDs[cnkIdx(x)][cnkIdx(z)][cnkIdx(y)] = id;
+		if (contains(chunk.getTile(cnkIdx(x),cnkIdx(y),cnkIdx(z)), canReplace)) {
+			chunk.rawSetTile(cnkIdx(x),cnkIdx(y),cnkIdx(z),id);
 			if (!chunk.needsUpdate) {
 				chunk.needsUpdate = true;
 				updateList.add(new Vector3i(getCnk(x),getCnk(y),getCnk(z)));
