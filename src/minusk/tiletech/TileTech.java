@@ -21,7 +21,6 @@ public class TileTech {
 	public static final TileTech game = new TileTech();
 	
 	private long window;
-	private int tilesVBO, baseShader, tilesTex;
 	
 	private void run() {
 		glfwInit();

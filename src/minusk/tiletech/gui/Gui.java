@@ -48,9 +48,9 @@ public class Gui {
 		
 		glUnmapBuffer(GL_ARRAY_BUFFER);
 		
-		glVertexAttribPointer(0, 3, GL_FLOAT, false, 9 * 4, 0);
-		glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true, 9 * 4, 3 * 4);
-		glVertexAttribPointer(2, 3, GL_FLOAT, false, 9 * 4, 6 * 4);
+		glVertexAttribPointer(0, 3, GL_FLOAT, false, 28, 0);
+		glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true, 28, 12);
+		glVertexAttribPointer(2, 3, GL_FLOAT, false, 28, 16);
 		glEnableVertexAttribArray(0);
 		glEnableVertexAttribArray(1);
 		glEnableVertexAttribArray(2);
