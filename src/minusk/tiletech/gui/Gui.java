@@ -1,17 +1,26 @@
 package minusk.tiletech.gui;
 
 import minusk.tiletech.gui.menus.PauseMenu;
+import minusk.tiletech.gui.nodes.GuiNode;
+import minusk.tiletech.gui.render.NinepatchData;
+import minusk.tiletech.gui.render.RenderData;
+import minusk.tiletech.gui.render.TextData;
+import minusk.tiletech.inventory.ItemStack;
 import minusk.tiletech.inventory.Slot;
 import minusk.tiletech.render.GLHandler;
 import minusk.tiletech.world.World;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Scanner;
 
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
 import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
+import static org.lwjgl.system.jemalloc.JEmalloc.je_free;
+import static org.lwjgl.system.jemalloc.JEmalloc.je_malloc;
 
 /**
  * @author MinusKelvin
@@ -19,26 +28,29 @@ import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
 public class Gui {
 	public static final Slot[] NO_SLOTS = new Slot[0];
 	
-	private static int vbo, bufsize, position;
-	private static GuiStructure current;
+	private static int vbo, bufsize=0;
+	private static int[] charWidths = new int[256];
+	private static GuiNode current;
 	private static Slot[] slotMap;
-	private static ByteBuffer buf;
+	
+	private static ArrayList<RenderData> renderQueue = new ArrayList<>();
 	
 	public static void init() {
 		vbo = glGenBuffers();
-		bufsize = 512;
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glBufferData(GL_ARRAY_BUFFER, bufsize*9*4, GL_STREAM_DRAW);
 		
 		setGui(PauseMenu.get(), NO_SLOTS);
+		
+		Scanner scanner = new Scanner(Gui.class.getResourceAsStream("/res/fontspace.dat"));
+		for (int i = 0; i < 256; i++)
+			charWidths[i] = scanner.nextInt();
+		scanner.close();
 	}
 	
 	public static void render() {
 		GLHandler.prepareGUI();
 		
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		buf = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY, buf);
-		position = 0;
+		renderQueue.clear();
 		
 		if (World.getWorld() != null)
 			Hud.render();
@@ -46,15 +58,30 @@ public class Gui {
 		if (current != null)
 			current.render();
 		
-		glUnmapBuffer(GL_ARRAY_BUFFER);
+		int vertices = 0;
+		for (RenderData data : renderQueue)
+			vertices += data.vertexCount();
 		
-		glVertexAttribPointer(0, 3, GL_FLOAT, false, 28, 0);
-		glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true, 28, 12);
-		glVertexAttribPointer(2, 3, GL_FLOAT, false, 28, 16);
+		ByteBuffer buffer = je_malloc(vertices*24);
+		renderQueue.forEach((r)->r.render(buffer));
+		buffer.position(0);
+		
+		glBindBuffer(GL_ARRAY_BUFFER, vbo);
+		if (vertices*24 > bufsize) {
+			bufsize = vertices*24;
+			glBufferData(GL_ARRAY_BUFFER, buffer, GL_STREAM_DRAW);
+		} else
+			glBufferSubData(GL_ARRAY_BUFFER, 0, buffer);
+		
+		je_free(buffer);
+		
+		glVertexAttribPointer(0, 2, GL_FLOAT, false, 24, 0);
+		glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true, 24, 8);
+		glVertexAttribPointer(2, 3, GL_FLOAT, false, 24, 12);
 		glEnableVertexAttribArray(0);
 		glEnableVertexAttribArray(1);
 		glEnableVertexAttribArray(2);
-		glDrawArrays(GL_TRIANGLES, 0, position);
+		glDrawArrays(GL_TRIANGLES, 0, vertices);
 	}
 	
 	public static void tick() {
@@ -66,7 +93,7 @@ public class Gui {
 		}
 	}
 	
-	public static void setGui(GuiStructure gui, Slot[] slotIDs) {
+	public static void setGui(GuiNode gui, Slot[] slotIDs) {
 		if (current != null)
 			current.onClose(slotMap, gui);
 		if (gui != null)
@@ -81,5 +108,38 @@ public class Gui {
 	
 	public static boolean isGrabbed() {
 		return current == null;
+	}
+	
+	public static Slot getSlot(int id) {
+		return slotMap[id];
+	}
+	
+	public static void drawNinepatch(int id, int x, int y, int w, int h, int color) {
+		drawThing(new NinepatchData(x, y, w, h, id, color));
+	}
+	
+	public static void drawText(String text, int x, int y, int color) {
+		drawThing(new TextData(text, x, y, color));
+	}
+	
+	public static void drawItem(ItemStack stack, int x, int y) {
+		
+	}
+	
+	public static void drawThing(RenderData thing) {
+		renderQueue.add(thing);
+	}
+	
+	public static int getCharWidth(int ch) {
+		return charWidths[ch];
+	}
+	
+	public static int getTextWidth(String text) {
+		int len = 0;
+		for (char ch : text.toCharArray()) {
+			len += getCharWidth(ch);
+			len += 2;
+		}
+		return len;
 	}
 }

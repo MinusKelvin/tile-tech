@@ -14,8 +14,7 @@ import java.util.Scanner;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL12.GL_TEXTURE_MAX_LEVEL;
-import static org.lwjgl.opengl.GL12.glTexImage3D;
+import static org.lwjgl.opengl.GL12.*;
 import static org.lwjgl.opengl.GL13.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
@@ -175,34 +174,51 @@ public class GLHandler {
 			shadowProjLoc = glGetUniformLocation(shadowShader, "proj");
 		}
 		
+		// GUI Shader
+		{
+			int vertex = glCreateShader(GL_VERTEX_SHADER);
+			glShaderSource(vertex, new Scanner(GLHandler.class.getResourceAsStream("/res/shaders/gui.vs.glsl")).useDelimiter("\\Z").next());
+			glCompileShader(vertex);
+			if (glGetShaderi(vertex, GL_COMPILE_STATUS) != 1) {
+				System.err.println(glGetShaderInfoLog(vertex));
+				return;
+			}
+			
+			int fragment = glCreateShader(GL_FRAGMENT_SHADER);
+			glShaderSource(fragment, new Scanner(GLHandler.class.getResourceAsStream("/res/shaders/gui.fs.glsl")).useDelimiter("\\Z").next());
+			glCompileShader(fragment);
+			if (glGetShaderi(fragment, GL_COMPILE_STATUS) != 1) {
+				System.err.println(glGetShaderInfoLog(fragment));
+				return;
+			}
+			
+			guiShader = glCreateProgram();
+			glAttachShader(guiShader, vertex);
+			glAttachShader(guiShader, fragment);
+			glLinkProgram(guiShader);
+			
+			if (glGetProgrami(guiShader, GL_LINK_STATUS) != 1) {
+				System.err.println(glGetProgramInfoLog(guiShader));
+				return;
+			}
+			glDeleteShader(vertex);
+			glDeleteShader(fragment);
+			glUseProgram(guiShader);
+			
+			guiProjLoc = glGetUniformLocation(guiShader, "proj");
+		}
+		
 		// Block textures
 		blockTexture = glGenTextures();
 		glBindTexture(GL_TEXTURE_2D_ARRAY, blockTexture);
-		
-		ByteBuffer buffer = je_malloc(12);
-		ByteBuffer img = stbi_load("res/blocks.png", buffer.slice().order(ByteOrder.nativeOrder()).asIntBuffer(),
-				((ByteBuffer) buffer.position(4)).slice().order(ByteOrder.nativeOrder()).asIntBuffer(),
-				((ByteBuffer) buffer.position(8)).slice().order(ByteOrder.nativeOrder()).asIntBuffer(), 4);
-		int w = buffer.getInt(0);
-		int h = buffer.getInt(4);
-		System.out.println(w+", "+h+", "+buffer.getInt(8)+", "+img.capacity());
-		je_free(buffer);
-		buffer = je_malloc(img.capacity());
-		
-		for (int i = 0; i < 16; i++)
-			for (int j = 0; j < 16; j++)
-				for (int k = 0; k < h / 16; k++)
-					for (int l = 0; l < w / 16; l++)
-						buffer.putInt((i * (w / 16) * (h / 16) * 16 + j * (w / 16) * (h / 16) + k * (w / 16) + l) * 4,
-								img.getInt((i * w * (h / 16) + j * (w / 16) + k * w + l) * 4));
-		
-		stbi_image_free(img);
-		glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8, w/16, h/16, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
-		je_free(buffer);
+		glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8, 32, 32, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+		loadTextureArrayPart("res/blocks.png", 32, 32, 16, 0);
 		
 		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_LEVEL, 0);
 		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		
 		// Shadowmaps
 		for (int i = 0; i < 4; i++) {
@@ -220,14 +236,52 @@ public class GLHandler {
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 		glDrawBuffer(GL_NONE);
 		
+		// GUI textures
+		guiTex = glGenTextures();
+		glBindTexture(GL_TEXTURE_2D_ARRAY, guiTex);
+		glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8, 32, 32, 272, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+		loadTextureArrayPart("res/gui.png", 32, 32, 4, 0);
+		loadTextureArrayPart("res/font.png", 32, 32, 16, 16);
+		
+		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_LEVEL, 0);
+		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		
 		// Enables
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glFrontFace(GL_CW);
 		
 		// Other
 		clearDepth = je_malloc(4);
 		clearDepth.putFloat(0, 256);
+	}
+	
+	private static void loadTextureArrayPart(String resource, int width, int height, int tiles, int startLayer) {
+		ByteBuffer buffer = je_malloc(12);
+		ByteBuffer img = stbi_load(resource, buffer.slice().order(ByteOrder.nativeOrder()).asIntBuffer(),
+				((ByteBuffer) buffer.position(4)).slice().order(ByteOrder.nativeOrder()).asIntBuffer(),
+				((ByteBuffer) buffer.position(8)).slice().order(ByteOrder.nativeOrder()).asIntBuffer(), 4);
+		int w = buffer.getInt(0);
+		int h = buffer.getInt(4);
+		System.out.println(w+", "+h+", "+buffer.getInt(8)+", "+img.capacity());
+		je_free(buffer);
+		buffer = je_malloc(img.capacity());
+		
+		for (int i = 0; i < tiles; i++)
+			for (int j = 0; j < tiles; j++)
+				for (int k = 0; k < height; k++)
+					for (int l = 0; l < width; l++)
+						buffer.putInt((i * width * height * tiles + j * width * height + k * width + l) * 4,
+								img.getInt((i * w * height + j * width + k * w + l) * 4));
+		
+		stbi_image_free(img);
+		glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, startLayer, width, height, tiles*tiles, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+		je_free(buffer);
 	}
 	
 	public static void clearTaps() {
@@ -253,15 +307,23 @@ public class GLHandler {
 		glUseProgram(shadowShader);
 		glViewport(0,0,shadowmapSize,shadowmapSize);
 		glClearBufferfv(GL_DEPTH, 0, clearDepth);
+		glBindTexture(GL_TEXTURE_2D_ARRAY, blockTexture);
 	}
 	
 	public static void prepareScene() {
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glUseProgram(baseShader);
 		glViewport(0,0,width,height);
+		glBindTexture(GL_TEXTURE_2D_ARRAY, blockTexture);
 	}
 	
 	public static void prepareGUI() {
-		
+		glUseProgram(guiShader);
+		glBindTexture(GL_TEXTURE_2D_ARRAY, guiTex);
+		Matrix4f mat = new Matrix4f().setOrthoSymmetric(width/2,-height/2,-1,1);
+		ByteBuffer buf = je_malloc(64);
+		mat.get(buf);
+		glUniformMatrix4fv(guiProjLoc, 1, false, buf);
+		je_free(buf);
 	}
 }

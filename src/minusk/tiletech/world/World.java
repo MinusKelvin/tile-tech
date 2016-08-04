@@ -76,9 +76,7 @@ public class World {
 	}
 	
 	public Tile getTile(int x, int y, int z, int dim) {
-		if (y < 0)
-			return Tile.TILES[5];
-		else if (y >= 256)
+		if (y < 0 || y >= 256)
 			return Tile.TILES[0];
 		else if (!world.containsKey(index2a.set(getCnk(x), getCnk(z))))
 			return Tile.TILES[5];
@@ -102,7 +100,8 @@ public class World {
 	
 	public void setTile(int x, int y, int z, int dim, int id) {
 		Chunk chunk = getChunk(getCnk(x), getCnk(y), getCnk(z), dim);
-		chunk.setTile(cnkIdx(x),cnkIdx(y),cnkIdx(z),id);
+		if (chunk != null)
+			chunk.setTile(cnkIdx(x),cnkIdx(y),cnkIdx(z),id);
 	}
 	
 	public Tile genGetTile(int x, int y, int z, int dim) {
