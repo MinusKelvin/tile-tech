@@ -5,8 +5,7 @@ import org.joml.Vector3i;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 
-import static minusk.tiletech.utils.Util.*;
-
+import static minusk.tiletech.utils.Util.getCnk;
 import static org.lwjgl.glfw.GLFW.glfwGetTime;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
@@ -35,11 +34,16 @@ public class Chunk {
 		for (int i = 0; i < 32; i++) {
 			for (int j = 0; j < 32; j++) {
 				for (int k = 0; k < 32; k++) {
-					if (k + y <= hs[i][j]) {
-						if (blockIDs == null)
-							blockIDs = new short[32][32][32];
-						blockIDs[i][j][k] = k + y < hs[i][j] ? Tile.Dirt.id : Tile.Grass.id;
-					}
+					if (k+y == 0)
+						blockIDs[i][j][k] = Tile.Bedrock.id;
+					else if (k + y > hs[i][j])
+						blockIDs[i][j][k] = Tile.Air.id;
+					else if (k + y == hs[i][j])
+						blockIDs[i][j][k] = Tile.Grass.id;
+					else if (k+y >= hs[i][j]-3)
+						blockIDs[i][j][k] = Tile.Dirt.id;
+					else
+						blockIDs[i][j][k] = Tile.Stone.id;
 				}
 			}
 		}
@@ -47,6 +51,7 @@ public class Chunk {
 	
 	private static int maxVerts = 1024;
 	private static ByteBuffer data = je_malloc(maxVerts*44);
+	private static Tile[][][] chunkEdges = new Tile[34][34][34];
 	
 	void updateVBO() {
 		double t = glfwGetTime();
@@ -54,39 +59,53 @@ public class Chunk {
 		verts = 0;
 		data.position(0);
 		
-		Tile[][][] chunkEdges = new Tile[34][34][34];
 		for (int i = 0; i < 32; i++) {
 			for (int j = 0; j < 32; j++) {
 				for (int k = 0; k < 32; k++)
-					chunkEdges[i + 1][j + 1][k + 1] = Tile.getTile(getTile(i,k,j));
-				chunkEdges[i+1][j+1][0] = World.getWorld().getTile(x+i,y-1,z+j,dim);
+					chunkEdges[i + 1][j + 1][k + 1] = Tile.getTile(blockIDs[i][j][k]);
+				if (y != 0) chunkEdges[i+1][j+1][0] = World.getWorld().getTile(x+i,y-1,z+j,dim);
+				else chunkEdges[i+1][j+1][0] = Tile.Bedrock;
 				chunkEdges[i+1][j+1][33] = World.getWorld().getTile(x+i,y+32,z+j,dim);
 				chunkEdges[0][j+1][i+1] = World.getWorld().getTile(x-1,y+i,z+j,dim);
 				chunkEdges[33][j+1][i+1] = World.getWorld().getTile(x+32,y+i,z+j,dim);
 				chunkEdges[i+1][0][j+1] = World.getWorld().getTile(x+i,y+j,z-1,dim);
 				chunkEdges[i+1][33][j+1] = World.getWorld().getTile(x+i,y+j,z+32,dim);
 			}
-			chunkEdges[i+1][0][0] = World.getWorld().getTile(x+i,y-1,z-1,dim);
 			chunkEdges[i+1][0][33] = World.getWorld().getTile(x+i,y+32,z-1,dim);
-			chunkEdges[i+1][33][0] = World.getWorld().getTile(x+i,y-1,z+32,dim);
 			chunkEdges[i+1][33][33] = World.getWorld().getTile(x+i,y+32,z+32,dim);
 			chunkEdges[0][0][i+1] = World.getWorld().getTile(x-1,y+i,z-1,dim);
 			chunkEdges[33][0][i+1] = World.getWorld().getTile(x+32,y+i,z-1,dim);
 			chunkEdges[0][33][i+1] = World.getWorld().getTile(x-1,y+i,z+32,dim);
 			chunkEdges[33][33][i+1] = World.getWorld().getTile(x+32,y+i,z+32,dim);
-			chunkEdges[0][i+1][0] = World.getWorld().getTile(x-1,y-1,z+i,dim);
-			chunkEdges[33][i+1][0] = World.getWorld().getTile(x+32,y-1,z+i,dim);
 			chunkEdges[0][i+1][33] = World.getWorld().getTile(x-1,y+32,z+i,dim);
 			chunkEdges[33][i+1][33] = World.getWorld().getTile(x+32,y+32,z+i,dim);
+			if (y != 0) {
+				chunkEdges[0][i + 1][0] = World.getWorld().getTile(x - 1, y - 1, z + i, dim);
+				chunkEdges[33][i + 1][0] = World.getWorld().getTile(x + 32, y - 1, z + i, dim);
+				chunkEdges[i + 1][0][0] = World.getWorld().getTile(x + i, y - 1, z - 1, dim);
+				chunkEdges[i + 1][33][0] = World.getWorld().getTile(x + i, y - 1, z + 32, dim);
+			} else {
+				chunkEdges[0][i + 1][0] = Tile.Bedrock;
+				chunkEdges[33][i + 1][0] = Tile.Bedrock;
+				chunkEdges[i + 1][0][0] = Tile.Bedrock;
+				chunkEdges[i + 1][33][0] = Tile.Bedrock;
+			}
 		}
-		chunkEdges[0][0][0] = World.getWorld().getTile(x-1,y-1,z-1,dim);
 		chunkEdges[0][0][33] = World.getWorld().getTile(x-1,y+32,z-1,dim);
-		chunkEdges[0][33][0] = World.getWorld().getTile(x-1,y-1,z+32,dim);
 		chunkEdges[0][33][33] = World.getWorld().getTile(x-1,y+32,z+32,dim);
-		chunkEdges[33][0][0] = World.getWorld().getTile(x+32,y-1,z-1,dim);
 		chunkEdges[33][0][33] = World.getWorld().getTile(x+32,y+32,z-1,dim);
-		chunkEdges[33][33][0] = World.getWorld().getTile(x+32,y-1,z+32,dim);
 		chunkEdges[33][33][33] = World.getWorld().getTile(x+32,y+32,z+32,dim);
+		if (y != 0) {
+			chunkEdges[0][0][0] = World.getWorld().getTile(x - 1, y - 1, z - 1, dim);
+			chunkEdges[0][33][0] = World.getWorld().getTile(x - 1, y - 1, z + 32, dim);
+			chunkEdges[33][0][0] = World.getWorld().getTile(x + 32, y - 1, z - 1, dim);
+			chunkEdges[33][33][0] = World.getWorld().getTile(x + 32, y - 1, z + 32, dim);
+		} else {
+			chunkEdges[0][0][0] = Tile.Bedrock;
+			chunkEdges[0][33][0] = Tile.Bedrock;
+			chunkEdges[33][0][0] = Tile.Bedrock;
+			chunkEdges[33][33][0] = Tile.Bedrock;
+		}
 		
 		for (int i = 0; i < 32; i++) {
 			for (int j = 0; j < 32; j++) {

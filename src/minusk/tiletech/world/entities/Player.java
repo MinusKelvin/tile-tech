@@ -73,9 +73,6 @@ public class Player extends Entity {
 		if (collides.down && GLHandler.getKey(GLFW_KEY_SPACE))
 			velocity.y = 0.7f;
 		
-		if (GLHandler.getTap(GLFW_KEY_ESCAPE))
-			GLHandler.toggleMouse();
-		
 		Vector3f eye = getEye(1);
 		raytrace = World.getWorld().raytrace(eye.x, eye.y, eye.z, dimension, look.x, look.y, look.z, 4);
 		if (raytrace == null) {
@@ -84,7 +81,8 @@ public class Player extends Entity {
 			if (GLHandler.getMouseTap(GLFW_MOUSE_BUTTON_LEFT)) {
 				System.out.printf("Looking at %d, %d, %d id: %d\n", raytrace.pos.x, raytrace.pos.y, raytrace.pos.z,
 						World.getWorld().getTile(raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, dimension).id);
-				World.getWorld().setTile(raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, dimension, Tile.Air.id);
+				if (World.getWorld().getTile(raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, dimension).id != Tile.Bedrock.id)
+					World.getWorld().setTile(raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, dimension, Tile.Air.id);
 			}
 		}
 	}

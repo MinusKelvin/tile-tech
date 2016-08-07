@@ -22,8 +22,9 @@ public abstract class Tile {
 	public static final Tile Maple_Log = new StandardSolidTile((short) 3,4, 4, 3, 3, 3, 3, 0);
 	public static final Tile Maple_Leaves = new StandardTransparentTile((short) 4,5, 5, 5, 5, 5, 5, 0.5f);
 	public static final Tile Bedrock = new StandardSolidTile((short) 5,6,6,6,6,6,6,0);
+	public static final Tile Stone = new StandardSolidTile((short) 6,7,7,7,7,7,7,0);
 	
-	public static Tile getTile(short id) {
+	public static Tile getTile(int id) {
 		return TILES[id & 0xFFFF];
 	}
 	
