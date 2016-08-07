@@ -25,15 +25,19 @@ import static org.lwjgl.system.jemalloc.JEmalloc.je_malloc;
 /**
  * @author MinusKelvin
  */
-public class Gui {
+public abstract class Gui extends GuiNode{
 	public static final Slot[] NO_SLOTS = new Slot[0];
 	
 	private static int vbo, bufsize=0;
 	private static int[] charWidths = new int[256];
-	private static GuiNode current;
+	private static Gui current;
 	private static Slot[] slotMap;
 	
 	private static ArrayList<RenderData> renderQueue = new ArrayList<>();
+	
+	public Gui() {
+		super(0,0);
+	}
 	
 	public static void init() {
 		vbo = glGenBuffers();
@@ -56,7 +60,7 @@ public class Gui {
 			Hud.render();
 		
 		if (current != null)
-			current.render();
+			current.draw();
 		
 		int vertices = 0;
 		for (RenderData data : renderQueue)
@@ -84,7 +88,7 @@ public class Gui {
 		glDrawArrays(GL_TRIANGLES, 0, vertices);
 	}
 	
-	public static void tick() {
+	public static void tock() {
 		if (GLHandler.getTap(GLFW_KEY_ESCAPE) && World.getWorld() != null) {
 			if (current == null)
 				setGui(PauseMenu.get(), NO_SLOTS);
@@ -93,7 +97,7 @@ public class Gui {
 		}
 	}
 	
-	public static void setGui(GuiNode gui, Slot[] slotIDs) {
+	public static void setGui(Gui gui, Slot[] slotIDs) {
 		if (current != null)
 			current.onClose(slotMap, gui);
 		if (gui != null)
@@ -142,4 +146,7 @@ public class Gui {
 		}
 		return len;
 	}
+	
+	public abstract void onOpen(Slot[] slots, Gui closing);
+	public abstract void onClose(Slot[] slots, Gui opening);
 }

@@ -17,7 +17,7 @@ public class SlotNode extends GuiNode {
 	}
 	
 	@Override
-	public void render() {
+	public void draw() {
 		Gui.drawNinepatch(0,x,y,48,48,-1);
 		Slot slot = Gui.getSlot(slotID);
 		Gui.drawItem(slot.getItem() == null ? slot.getGhost() : slot.getItem(), x+8, y+8);
@@ -27,12 +27,7 @@ public class SlotNode extends GuiNode {
 	public void layout() {}
 	
 	@Override
-	public void onOpen(Slot[] slots, GuiNode closing) {
-		
-	}
-	
-	@Override
-	public void onClose(Slot[] slots, GuiNode opening) {
+	public void tick() {
 		
 	}
 }

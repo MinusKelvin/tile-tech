@@ -22,6 +22,7 @@ public abstract class Tile {
 	public static final Tile Maple_Log = new StandardSolidTile(3,4, 4, 3, 3, 3, 3);
 	public static final Tile Maple_Leaves = new StandardTransparentTile(4,5, 5, 5, 5, 5, 5);
 	public static final Tile Bedrock = new StandardSolidTile(5,6,6,6,6,6,6);
+	public static final Tile Stone = new StandardSolidTile(6,7,7,7,7,7,7);
 	
 	public final int id;
 	public Tile(int id) {

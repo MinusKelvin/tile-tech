@@ -21,6 +21,8 @@ public class TileTech {
 	public static final TileTech game = new TileTech();
 	
 	private long window;
+	private boolean paused = false;
+	private double now;
 	
 	private void run() {
 		glfwInit();
@@ -51,6 +53,7 @@ public class TileTech {
 		clearColor.position(0);
 		
 		double time = glfwGetTime();
+		float between = 0;
 		while (true) {
 			double t = glfwGetTime();
 			if (glfwWindowShouldClose(window) == 1)
@@ -58,26 +61,44 @@ public class TileTech {
 			
 			int c = 0;
 			while (glfwGetTime() - time >= 0.05) {
-				time += 0.05;
-				World.getWorld().tick();
-				Gui.tick();
+				if (!paused) {
+					time += 0.05;
+					World.getWorld().tick();
+				}
+				Gui.tock();
 				GLHandler.clearTaps();
-				if (c++ == 5) {
+				if (c++ == 5 && !paused) {
 					time = glfwGetTime();
 					break;
 				}
+				if (paused)
+					break;
 			}
 			
 			glClearBufferfv(GL_COLOR, 0, clearColor);
 			glClearBufferfv(GL_DEPTH, 0, clearDepth);
 			
-			World.getWorld().renderWorld((float) ((glfwGetTime()-time) / 0.05));
+			if (!paused)
+				between = (float) ((glfwGetTime()-time) / 0.05);
+			else
+				between = (float) ((now - time) / 0.05);
+			World.getWorld().renderWorld(between);
 			Gui.render();
 			
 			glfwSwapBuffers(window);
 			glfwPollEvents();
 //			System.out.println((glfwGetTime() - t) * 1000);
 		}
+	}
+	
+	public void pause() {
+		paused = true;
+		now = glfwGetTime();
+	}
+	
+	public void unpause() {
+		paused = false;
+		glfwSetTime(now);
 	}
 	
 	public static void main(String[] args) {

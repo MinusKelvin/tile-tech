@@ -144,7 +144,9 @@ public class World {
 	
 	public void tick() {
 		player.update();
-		
+	}
+	
+	public void renderWorld(float alpha) {
 		int c = 0;
 		Vector3i[] closest = new Vector3i[8];
 		int[] distances = new int[8];
@@ -158,8 +160,8 @@ public class World {
 							getCnk((int) Math.floor(player.center.y)), getCnk((int) Math.floor(player.center.z)));
 					continue outer;
 				} else
-					if (distances[far] > distances[j])
-						far = j;
+				if (distances[far] > distances[j])
+					far = j;
 			}
 			int dist = (int) updateList.get(i).distanceSquared(getCnk((int) Math.floor(player.center.x)),
 					getCnk((int) Math.floor(player.center.y)), getCnk((int) Math.floor(player.center.z)));
@@ -173,9 +175,7 @@ public class World {
 				getChunk(closest[i].x, closest[i].y, closest[i].z, 0).updateVBO();
 		}
 		updateList.removeAll(Arrays.asList(closest));
-	}
-	
-	public void renderWorld(float alpha) {
+		
 		lookaround.identity();
 		lookaround.lookAlong(player.look.x, player.look.y, player.look.z, 0, 1, 0);
 		Vector3f eye = player.getEye(alpha);
@@ -187,7 +187,7 @@ public class World {
 		
 		for (int i = 0; i < 4; i++) {
 			GLHandler.prepareShadow(i);
-			shadowCam.setOrtho(-5*intpow(4,i), 5*intpow(4,i), -5*intpow(4,i), 5*intpow(4,i), 256, -256);
+			shadowCam.setOrtho(-4*intpow(4,i), 4*intpow(4,i), -4*intpow(4,i), 4*intpow(4,i), 256, -256);
 			shadowCam.lookAlong(-0.440225f, 0.880451f, 0.17609f, 0, 1, 0);
 			shadowCam.translate(-Math.round(eye.x), -Math.round(eye.y), -Math.round(eye.z));
 			
@@ -200,7 +200,7 @@ public class World {
 					cp.render(culler, true);
 			});
 		}
-		shadowCam.setOrtho(-5, 5, -5, 5, 256, -256);
+		shadowCam.setOrtho(-4, 4, -4, 4, 256, -256);
 		shadowCam.lookAlong(-0.440225f, 0.880451f, 0.17609f, 0, 1, 0);
 		shadowCam.translate(-Math.round(eye.x), -Math.round(eye.y), -Math.round(eye.z));
 		shadowCam.get(matrixUpload);

@@ -29,10 +29,22 @@ public class Chunk {
 		this.z = z;
 		this.dim = dim;
 		
-		for (int i = 0; i < 32; i++)
-			for (int j = 0; j < 32; j++)
-				for (int k = 0; k < 32; k++)
-					blockIDs[i][j][k] = k+y > hs[i][j] ? Tile.Air.id : k+y < hs[i][j] ? Tile.Dirt.id : Tile.Grass.id;
+		for (int i = 0; i < 32; i++) {
+			for (int j = 0; j < 32; j++) {
+				for (int k = 0; k < 32; k++) {
+					if (k+y == 0)
+						blockIDs[i][j][k] = Tile.Bedrock.id;
+					else if (k + y > hs[i][j])
+						blockIDs[i][j][k] = Tile.Air.id;
+					else if (k + y == hs[i][j])
+						blockIDs[i][j][k] = Tile.Grass.id;
+					else if (k+y >= hs[i][j]-3)
+						blockIDs[i][j][k] = Tile.Dirt.id;
+					else
+						blockIDs[i][j][k] = Tile.Stone.id;
+				}
+			}
+		}
 	}
 	
 	private static int maxVerts = 1024;

@@ -1,7 +1,5 @@
 package minusk.tiletech.gui.nodes;
 
-import minusk.tiletech.inventory.Slot;
-
 /**
  * @author MinusKelvin
  */
@@ -14,9 +12,8 @@ public abstract class GuiNode {
 		height = h;
 	}
 	
-	public abstract void render();
+	public abstract void draw();
 	/** Positions the children of this element. Does not modify this element. */
 	public abstract void layout();
-	public abstract void onOpen(Slot[] slots, GuiNode closing);
-	public abstract void onClose(Slot[] slots, GuiNode opening);
+	public abstract void tick();
 }
