@@ -18,9 +18,9 @@ import static org.lwjgl.system.jemalloc.JEmalloc.je_realloc;
  */
 public class Chunk {
 	// Note: All of these block arrays are [x][z][y]
-	short[][][] blockIDs;
+	short[][][] blockIDs = new short[32][32][32];
 	// SSSS RRRR GGGG BBBB YYYY MMMM CCCC WWWW
-	int[][][] light;
+	int[][][] light = new int[32][32][32];
 	HashMap<Vector3i, Object> blockMeta = new HashMap<>(32);
 	private int vbo = -1, verts, x,y,z,dim;
 	boolean needsUpdate = false;
@@ -36,7 +36,9 @@ public class Chunk {
 				for (int k = 0; k < 32; k++) {
 					if (k+y == 0)
 						blockIDs[i][j][k] = Tile.Bedrock.id;
-					else if (k + y > hs[i][j])
+					else if (k + y > hs[i][j] ||
+							Math.abs(World.getWorld().noise2Da.eval((x+i)/40.0,(y+k)/30.0,(z+j)/40.0)) < 0.1 &&
+							Math.abs(World.getWorld().noise2Db.eval((x+i)/40.0,(y+k)/30.0,(z+j)/40.0)) < 0.05)
 						blockIDs[i][j][k] = Tile.Air.id;
 					else if (k + y == hs[i][j])
 						blockIDs[i][j][k] = Tile.Grass.id;

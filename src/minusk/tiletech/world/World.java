@@ -79,8 +79,8 @@ public class World {
 		worldGenThread.setName("World Generation Thread");
 		worldGenThread.setPriority(Thread.MIN_PRIORITY);
 		worldGenThread.start();
-		for (int i = -12/*16*/; i <= 12/*16*/; i++)
-			for (int j = -12/*16*/; j <= 12/*16*/; j++)
+		for (int i = -12; i <= 12; i++)
+			for (int j = -12; j <= 12; j++)
 				if (i < -4 || i > 4 || j < -4 || j > 4)
 					generatePoints.add(new Vector3i(i,j,0));
 	}
@@ -190,11 +190,13 @@ public class World {
 				distances[far] = dist;
 			}
 		}
-		for (int i = 0; i < 8; i++) {
-			if (closest[i] != null)
-				getChunk(closest[i].x, closest[i].y, closest[i].z, 0).updateVBO();
-		}
 		updateList.removeAll(Arrays.asList(closest));
+		for (int i = 0; i < 8; i++) {
+			if (closest[i] != null) {
+				getChunk(closest[i].x, closest[i].y, closest[i].z, 0).needsUpdate = false;
+				getChunk(closest[i].x, closest[i].y, closest[i].z, 0).updateVBO();
+			}
+		}
 		
 		lookaround.identity();
 		lookaround.lookAlong(player.look.x, player.look.y, player.look.z, 0, 1, 0);

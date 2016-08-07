@@ -1,5 +1,6 @@
 package minusk.tiletech.render;
 
+import minusk.tiletech.TileTech;
 import minusk.tiletech.gui.Gui;
 import minusk.tiletech.world.World;
 import org.joml.Matrix4f;
@@ -306,8 +307,12 @@ public class GLHandler {
 	}
 	
 	public static void prepareShadow(int phase) {
-		if (newtime)
-			time = (float) glfwGetTime();
+		if (newtime) {
+			if (TileTech.game.isPaused())
+				time = (float) TileTech.game.getNow();
+			else
+				time = (float) glfwGetTime();
+		}
 		newtime = false;
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 		glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadowTex[phase], 0);

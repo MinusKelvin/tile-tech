@@ -101,6 +101,14 @@ public class TileTech {
 		glfwSetTime(now);
 	}
 	
+	public boolean isPaused() {
+		return paused;
+	}
+	
+	public double getNow() {
+		return now;
+	}
+	
 	public static void main(String[] args) {
 		Thread.currentThread().setPriority(Thread.MAX_PRIORITY-1);
 		game.run();
