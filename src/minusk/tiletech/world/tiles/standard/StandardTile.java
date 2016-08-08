@@ -1,6 +1,6 @@
 package minusk.tiletech.world.tiles.standard;
 
-import minusk.tiletech.world.Tile;
+import minusk.tiletech.world.tiles.Tile;
 import minusk.tiletech.world.entities.Entity;
 import org.joml.RayAabIntersection;
 

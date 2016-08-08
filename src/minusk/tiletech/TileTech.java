@@ -1,6 +1,7 @@
 package minusk.tiletech;
 
 import minusk.tiletech.gui.Gui;
+import minusk.tiletech.gui.menus.PauseMenu;
 import minusk.tiletech.render.GLHandler;
 import minusk.tiletech.world.World;
 import org.lwjgl.opengl.GL;
@@ -8,6 +9,7 @@ import org.lwjgl.opengl.GL;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+import static minusk.tiletech.gui.Gui.NO_SLOTS;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.GL_COLOR;
 import static org.lwjgl.opengl.GL11.GL_DEPTH;
@@ -36,11 +38,12 @@ public class TileTech {
 		window = glfwCreateWindow(1024, 576, "Tile Tech", 0, 0);
 		glfwMakeContextCurrent(window);
 		GL.createCapabilities();
-		glfwSwapInterval(0);
+//		glfwSwapInterval(0);
 		
 		GLHandler.init(window);
 		Gui.init();
 		new World();
+		Gui.setGui(PauseMenu.get(), NO_SLOTS);
 		
 		ByteBuffer clearColor = je_malloc(20);
 		clearColor.putFloat(0, 0.25f);

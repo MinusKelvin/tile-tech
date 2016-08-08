@@ -1,9 +1,13 @@
 package minusk.tiletech.world;
 
+import minusk.tiletech.world.structures.Cave;
+import minusk.tiletech.world.tiles.Tile;
+import org.joml.Intersectionf;
 import org.joml.Vector3i;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
+import java.util.List;
 
 import static minusk.tiletech.utils.Util.getCnk;
 import static org.lwjgl.glfw.GLFW.glfwGetTime;
@@ -25,7 +29,7 @@ public class Chunk {
 	private int vbo = -1, verts, x,y,z,dim;
 	boolean needsUpdate = false;
 	
-	public Chunk(int x, int y, int z, int dim, int[][] hs) {
+	public Chunk(int x, int y, int z, int dim, int[][] hs, List<Cave.Segment> nearbySegments) {
 		this.x = x;
 		this.y = y;
 		this.z = z;
@@ -36,9 +40,7 @@ public class Chunk {
 				for (int k = 0; k < 32; k++) {
 					if (k+y == 0)
 						blockIDs[i][j][k] = Tile.Bedrock.id;
-					else if (k + y > hs[i][j] ||
-							Math.abs(World.getWorld().noise2Da.eval((x+i)/40.0,(y+k)/30.0,(z+j)/40.0)) < 0.1 &&
-							Math.abs(World.getWorld().noise2Db.eval((x+i)/40.0,(y+k)/30.0,(z+j)/40.0)) < 0.05)
+					else if (k + y > hs[i][j] || inCave(x+i,y+k,z+j,nearbySegments))
 						blockIDs[i][j][k] = Tile.Air.id;
 					else if (k + y == hs[i][j])
 						blockIDs[i][j][k] = Tile.Grass.id;
@@ -49,6 +51,14 @@ public class Chunk {
 				}
 			}
 		}
+	}
+	
+	private static boolean inCave(int x, int y, int z, List<Cave.Segment> segments) {
+		for (Cave.Segment segment : segments) {
+			if (Intersectionf.testLineSegmentSphere(segment.p1.x, segment.p1.y, segment.p1.z, segment.p2.x, segment.p2.y, segment.p2.z, x,y,z, 6))
+				return true;
+		}
+		return false;
 	}
 	
 	private static int maxVerts = 1024;

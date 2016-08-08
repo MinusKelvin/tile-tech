@@ -1,6 +1,6 @@
 package minusk.tiletech.world.structures;
 
-import minusk.tiletech.world.Tile;
+import minusk.tiletech.world.tiles.Tile;
 
 /**
  * Created by MinusKelvin on 2/14/16.

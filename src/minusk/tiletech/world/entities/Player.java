@@ -3,7 +3,7 @@ package minusk.tiletech.world.entities;
 import minusk.tiletech.render.FaceRenderer;
 import minusk.tiletech.render.GLHandler;
 import minusk.tiletech.utils.DirectionalBoolean;
-import minusk.tiletech.world.Tile;
+import minusk.tiletech.world.tiles.Tile;
 import minusk.tiletech.world.World;
 import org.joml.Vector3f;
 
@@ -64,14 +64,14 @@ public class Player extends Entity {
 		if (!(mv.x == mv.y && mv.y == mv.z && mv.x == 0))
 			mv.normalize();
 		
-		velocity.add(mv.mul(0.15f));
+		velocity.add(mv.mul(0.35f));
 		velocity.mul(0.5f, 0.95f, 0.5f);
 		velocity.y -= 0.12f;
 		
 		DirectionalBoolean collides = move();
 		
 		if (collides.down && GLHandler.getKey(GLFW_KEY_SPACE))
-			velocity.y = 0.7f;
+			velocity.y = 1.7f;
 		
 		Vector3f eye = getEye(1);
 		raytrace = World.getWorld().raytrace(eye.x, eye.y, eye.z, dimension, look.x, look.y, look.z, 4);

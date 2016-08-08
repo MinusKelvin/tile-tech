@@ -43,8 +43,6 @@ public abstract class Gui extends GuiNode{
 		vbo = glGenBuffers();
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		
-		setGui(PauseMenu.get(), NO_SLOTS);
-		
 		Scanner scanner = new Scanner(Gui.class.getResourceAsStream("/res/fontspace.dat"));
 		for (int i = 0; i < 256; i++)
 			charWidths[i] = scanner.nextInt();

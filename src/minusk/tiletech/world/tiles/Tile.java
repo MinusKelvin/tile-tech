@@ -1,4 +1,4 @@
-package minusk.tiletech.world;
+package minusk.tiletech.world.tiles;
 
 import minusk.tiletech.world.entities.Entity;
 import minusk.tiletech.world.tiles.standard.StandardEmptyTile;
