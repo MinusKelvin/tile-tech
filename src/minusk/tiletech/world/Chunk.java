@@ -2,7 +2,7 @@ package minusk.tiletech.world;
 
 import minusk.tiletech.world.structures.Cave;
 import minusk.tiletech.world.tiles.Tile;
-import org.joml.Intersectionf;
+import org.joml.Vector3f;
 import org.joml.Vector3i;
 
 import java.nio.ByteBuffer;
@@ -55,7 +55,10 @@ public class Chunk {
 	
 	private static boolean inCave(int x, int y, int z, List<Cave.Segment> segments) {
 		for (Cave.Segment segment : segments) {
-			if (Intersectionf.testLineSegmentSphere(segment.p1.x, segment.p1.y, segment.p1.z, segment.p2.x, segment.p2.y, segment.p2.z, x,y,z, 6))
+			float t = new Vector3f(x,y,z).sub(segment.p1).dot(segment.dir) / segment.length;
+			t = t < 0 ? 0 : t > 1 ? 1 : t;
+			float d = segment.size1*t + segment.size2*(1-t);
+			if (new Vector3f(segment.dir).mul(t*segment.length).add(segment.p1).sub(x,y,z).lengthSquared() < d*d)
 				return true;
 		}
 		return false;

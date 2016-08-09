@@ -8,6 +8,8 @@ import org.lwjgl.glfw.GLFWCursorPosCallback;
 import org.lwjgl.glfw.GLFWFramebufferSizeCallback;
 import org.lwjgl.glfw.GLFWKeyCallback;
 import org.lwjgl.glfw.GLFWMouseButtonCallback;
+import org.lwjgl.opengl.EXTTextureFilterAnisotropic;
+import org.lwjgl.opengl.GLCapabilities;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -76,7 +78,7 @@ public class GLHandler {
 		return glfwGetMouseButton(window, button) == GLFW_PRESS;
 	}
 	
-	public static void init(long window) {
+	public static void init(long window, GLCapabilities capabilities) {
 		GLHandler.window = window;
 		glfwSetFramebufferSizeCallback(window, fbs = GLFWFramebufferSizeCallback.create((win, width, height) -> {
 			glViewport(0, 0, width, height);
@@ -213,6 +215,10 @@ public class GLHandler {
 			guiProjLoc = glGetUniformLocation(guiShader, "proj");
 		}
 		
+		float maxAniso = 1;
+		if (capabilities.GL_EXT_texture_filter_anisotropic)
+			maxAniso = glGetFloat(EXTTextureFilterAnisotropic.GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT);
+		
 		// Block textures
 		blockTexture = glGenTextures();
 		glBindTexture(GL_TEXTURE_2D_ARRAY, blockTexture);
@@ -224,6 +230,8 @@ public class GLHandler {
 		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		if (capabilities.GL_EXT_texture_filter_anisotropic)
+			glTexParameterf(GL_TEXTURE_2D_ARRAY, EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAniso);
 		
 		// Shadowmaps
 		for (int i = 0; i < 4; i++) {
@@ -253,6 +261,8 @@ public class GLHandler {
 		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		if (capabilities.GL_EXT_texture_filter_anisotropic)
+			glTexParameterf(GL_TEXTURE_2D_ARRAY, EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAniso);
 		
 		// Enables
 		glEnable(GL_DEPTH_TEST);

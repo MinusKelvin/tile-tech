@@ -64,14 +64,16 @@ public class Player extends Entity {
 		if (!(mv.x == mv.y && mv.y == mv.z && mv.x == 0))
 			mv.normalize();
 		
-		velocity.add(mv.mul(0.35f));
+		velocity.add(mv.mul(0.65f));
 		velocity.mul(0.5f, 0.95f, 0.5f);
-		velocity.y -= 0.12f;
+		velocity.y -= 0.1f;
 		
 		DirectionalBoolean collides = move();
 		
 		if (collides.down && GLHandler.getKey(GLFW_KEY_SPACE))
-			velocity.y = 1.7f;
+			velocity.y = 1.3f;
+		if (GLHandler.getTap(GLFW_KEY_R))
+			spawn();
 		
 		Vector3f eye = getEye(1);
 		raytrace = World.getWorld().raytrace(eye.x, eye.y, eye.z, dimension, look.x, look.y, look.z, 4);
@@ -95,17 +97,17 @@ public class Player extends Entity {
 		ByteBuffer buffer = je_calloc(44,36);
 		
 		if (raytrace.side.up)
-			FaceRenderer.renderTopFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 6, 0);
+			FaceRenderer.renderTopFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 8, 0);
 		else if (raytrace.side.down)
-			FaceRenderer.renderBottomFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 6, 0);
+			FaceRenderer.renderBottomFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 8, 0);
 		else if (raytrace.side.west)
-			FaceRenderer.renderWestFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 6, 0);
+			FaceRenderer.renderWestFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 8, 0);
 		else if (raytrace.side.east)
-			FaceRenderer.renderEastFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 6, 0);
+			FaceRenderer.renderEastFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 8, 0);
 		else if (raytrace.side.north)
-			FaceRenderer.renderNorthFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 6, 0);
+			FaceRenderer.renderNorthFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 8, 0);
 		else if (raytrace.side.south)
-			FaceRenderer.renderSouthFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 6, 0);
+			FaceRenderer.renderSouthFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 8, 0);
 		
 		buffer.position(0);
 		
@@ -150,7 +152,7 @@ public class Player extends Entity {
 	}
 	
 	public void spawn() {
-		center.x =0.5f;
+		center.x = 0.5f;
 		center.z = center.x;
 		for (int i = 255; i >= 0; i--) {
 			center.y = i+halfHeight+0.1f;

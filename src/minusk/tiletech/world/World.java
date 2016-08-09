@@ -42,7 +42,7 @@ public class World {
 	public static final int LIGHT_SUN = 7;
 	
 	public final Player player = new Player();
-	public final long seed = System.currentTimeMillis();
+	public final long seed = 534634958076L;
 	public final OpenSimplexNoise noise1 = new OpenSimplexNoise();
 	public final OpenSimplexNoise noise2 = new OpenSimplexNoise(seed*31);
 	public final OpenSimplexNoise noise3 = new OpenSimplexNoise(seed*31*31);
@@ -55,8 +55,8 @@ public class World {
 	private final Vector2i index2a = new Vector2i();
 	private final Vector2i index2b = new Vector2i();
 	private final Vector3i index3 = new Vector3i();
-	private final List<Vector3i> updateList = Collections.synchronizedList(new ArrayList<>());
-	private final ArrayDeque<Vector3i> generatePoints = new ArrayDeque<>();
+	private final Vector<Vector3i> updateList = new Vector<>();
+	private final Vector<Vector3i> generatePoints = new Vector<>();
 	
 	public World() {
 		currentWorld = this;
@@ -72,7 +72,7 @@ public class World {
 					e.printStackTrace();
 				}
 				if (!generatePoints.isEmpty()) {
-					Vector3i v = generatePoints.poll();
+					Vector3i v = generatePoints.remove(0);
 					rawGenerateChunk(v.x, v.y, v.z);
 				}
 			}
@@ -80,11 +80,12 @@ public class World {
 		worldGenThread.setDaemon(true);
 		worldGenThread.setName("World Generation Thread");
 		worldGenThread.setPriority(Thread.MIN_PRIORITY);
-		worldGenThread.start();
 		for (int i = -12; i <= 12; i++)
 			for (int j = -12; j <= 12; j++)
 				if (i < -4 || i > 4 || j < -4 || j > 4)
 					generatePoints.add(new Vector3i(i,j,0));
+		generatePoints.sort((v1,v2) -> Long.compare(v1.lengthSquared(), v2.lengthSquared()));
+		worldGenThread.start();
 	}
 	
 	public Tile getTile(int x, int y, int z, int dim) {
@@ -169,26 +170,46 @@ public class World {
 	}
 	
 	public void renderWorld(float alpha) {
+		lookaround.identity();
+		lookaround.lookAlong(player.look.x, player.look.y, player.look.z, 0, 1, 0);
+		Vector3f eye = player.getEye(alpha);
+		lookaround.translate(-eye.x, -eye.y, -eye.z);
+		GLHandler.projection.mul(lookaround, lookaround);
+		
+		for (int i = Math.round(eye.x / 32) - 1; i < Math.round(eye.x / 32) + 1; i++) {
+			for (int j = Math.round(eye.y / 32) - 1; j < Math.round(eye.y / 32) + 1; j++) {
+				for (int k = Math.round(eye.z / 32) - 1; k < Math.round(eye.z / 32) + 1; k++) {
+					Chunk chunk = getChunk(i, j, k, 0);
+					if (chunk != null && chunk.needsUpdate) {
+						chunk.needsUpdate = false;
+						chunk.updateVBO();
+						updateList.remove(new Vector3i(i,j,k));
+					}
+				}
+			}
+		}
+		
 		int c = 0;
 		Vector3i[] closest = new Vector3i[8];
 		int[] distances = new int[8];
 		outer:
 		for (int i = 0; i < updateList.size(); i++) {
 			int far = 0;
+			Vector3i current = updateList.get(i);
 			for (int j = 0; j < 8; j++) {
 				if (closest[j] == null) {
-					closest[j] = updateList.get(i);
-					distances[j] = (int) closest[j].distanceSquared(getCnk((int) Math.floor(player.center.x)),
+					closest[j] = current;
+					distances[j] = (int) current.distanceSquared(getCnk((int) Math.floor(player.center.x)),
 							getCnk((int) Math.floor(player.center.y)), getCnk((int) Math.floor(player.center.z)));
 					continue outer;
-				} else
-				if (distances[far] > distances[j])
+				} else if (distances[far] > distances[j])
 					far = j;
 			}
-			int dist = (int) updateList.get(i).distanceSquared(getCnk((int) Math.floor(player.center.x)),
+			int dist = (int) current.distanceSquared(getCnk((int) Math.floor(player.center.x)),
 					getCnk((int) Math.floor(player.center.y)), getCnk((int) Math.floor(player.center.z)));
-			if (dist < distances[far]) {
-				closest[far] = updateList.get(i);
+			if (dist < distances[far] || (culler.testAab(current.x*32, current.y*32, current.z*32, current.x*32+32, current.y*32+32, current.z*32+32) &&
+					!culler.testAab(closest[far].x*32, closest[far].y*32, closest[far].z*32, closest[far].x*32+32, closest[far].y*32+32, closest[far].z*32+32))) {
+				closest[far] = current;
 				distances[far] = dist;
 			}
 		}
@@ -199,12 +220,6 @@ public class World {
 				getChunk(closest[i].x, closest[i].y, closest[i].z, 0).updateVBO();
 			}
 		}
-		
-		lookaround.identity();
-		lookaround.lookAlong(player.look.x, player.look.y, player.look.z, 0, 1, 0);
-		Vector3f eye = player.getEye(alpha);
-		lookaround.translate(-eye.x, -eye.y, -eye.z);
-		GLHandler.projection.mul(lookaround, lookaround);
 		
 		glCullFace(GL_FRONT);
 		glDepthFunc(GL_LEQUAL);
@@ -259,10 +274,13 @@ public class World {
 	
 	private void checkChunk(int x, int z, int dim) {
 		VerticalChunk vc = getChunk(x,z,dim);
-		if (vc != null && getChunk(x-1,z,dim) != null && getChunk(x+1,z,dim) != null && getChunk(x,z-1,dim) != null && getChunk(x,z+1,dim) != null) {
+		if (vc != null && getChunk(x-1,z,dim) != null && getChunk(x+1,z,dim) != null && getChunk(x,z-1,dim) != null && getChunk(x,z+1,dim) != null &&
+				getChunk(x-1,z-1,dim) != null && getChunk(x+1,z+1,dim) != null && getChunk(x+1,z-1,dim) != null && getChunk(x-1,z+1,dim) != null) {
 			vc.generate();
-			for (int i = 0; i < 8; i++)
-				updateList.add(new Vector3i(x,i,z));
+			for (int i = 0; i < 8; i++) {
+				updateList.add(new Vector3i(x, i, z));
+				vc.chunks[i].needsUpdate = true;
+			}
 		}
 	}
 	
@@ -275,8 +293,8 @@ public class World {
 				assert caves.containsKey(new Vector2i(i,j));
 				Cave cave = caves.get(new Vector2i(i,j));
 				for (Cave.Segment seg : cave.segments) {
-					if (new Vector2i(seg.p1.x,seg.p1.z).distanceSquared(x*32+16,z*32+16) < 1024 ||
-							new Vector2i(seg.p2.x,seg.p2.z).distanceSquared(x*32+16,z*32+16) < 1024) {
+					if (new Vector2f(seg.p1.x,seg.p1.z).sub(x*32+16,z*32+16).lengthSquared() < 1024 ||
+							new Vector2f(seg.p2.x,seg.p2.z).sub(x*32+16,z*32+16).lengthSquared() < 1024) {
 						nearbySegments.add(seg);
 					}
 				}
@@ -288,21 +306,27 @@ public class World {
 		checkChunk(x+1,z,dim);
 		checkChunk(x,z-1,dim);
 		checkChunk(x,z+1,dim);
+		checkChunk(x-1,z-1,dim);
+		checkChunk(x+1,z+1,dim);
+		checkChunk(x+1,z-1,dim);
+		checkChunk(x-1,z+1,dim);
 	}
 	
 	private void genCave(int x, int z) {
 		Cave cave = new Cave();
 		Random rng = new Random(seed + x*17317 + z*5557);
 		int segcount = (int) ((rng.nextDouble()+0.25)*48);
-		Vector3i pos = new Vector3i(x*32+rng.nextInt(32), rng.nextInt(256), z*32+rng.nextInt(32));
+		Vector3f pos = new Vector3f(x*32+rng.nextInt(32), rng.nextInt(256), z*32+rng.nextInt(32));
 		for (int i = 0; i < segcount; i++) {
-			Vector3i p = new Vector3i(pos);
-			pos.x += noise3.eval(x*4+i/8.0, z*4+i/8.0, 0) * 10;
-			pos.y += noise3.eval(x*4+i/8.0, z*4+i/8.0, 5) * 5;
-			pos.z += noise3.eval(x*4+i/8.0, z*4+i/8.0, 10) * 10;
-			if (getCnk(pos.x) >= x+6 || getCnk(pos.x) <= x-6 || getCnk(pos.z) >= z+6 || getCnk(pos.z) <= z-6)
+			Vector3f p = new Vector3f(pos);
+			pos.x += noise3.eval(x*4, z-26, i/8.0) * 10;
+			pos.y += noise3.eval(x-26, z*4, i/8.0) * 5;
+			pos.z += noise3.eval(x*4, z*4, i/8.0) * 10;
+			if (getCnk((int) pos.x) >= x+6 || getCnk((int) pos.x) <= x-6 || getCnk((int) pos.z) >= z+6 || getCnk((int) pos.z) <= z-6) 
 				break;
-			cave.segments.add(new Cave.Segment(p, new Vector3i(pos)));
+			cave.segments.add(new Cave.Segment(p, new Vector3f(pos),
+					(float) (noise3.eval(x*4, z*4, -i/5.0)+1.25) * 2,
+					(float) (noise3.eval(x*4, z*4, -0.2-i/5.0)+1.25) * 2));
 		}
 		caves.put(new Vector2i(x,z), cave);
 	}

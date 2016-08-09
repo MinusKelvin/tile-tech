@@ -5,6 +5,7 @@ import minusk.tiletech.gui.menus.PauseMenu;
 import minusk.tiletech.render.GLHandler;
 import minusk.tiletech.world.World;
 import org.lwjgl.opengl.GL;
+import org.lwjgl.opengl.GLCapabilities;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -37,10 +38,10 @@ public class TileTech {
 		
 		window = glfwCreateWindow(1024, 576, "Tile Tech", 0, 0);
 		glfwMakeContextCurrent(window);
-		GL.createCapabilities();
+		GLCapabilities capabilities = GL.createCapabilities();
 //		glfwSwapInterval(0);
 		
-		GLHandler.init(window);
+		GLHandler.init(window, capabilities);
 		Gui.init();
 		new World();
 		Gui.setGui(PauseMenu.get(), NO_SLOTS);
