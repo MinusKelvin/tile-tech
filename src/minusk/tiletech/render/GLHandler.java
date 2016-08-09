@@ -40,7 +40,7 @@ public class GLHandler {
 	private static GLFWCursorPosCallback cp;
 	private static GLFWKeyCallback k;
 	private static GLFWMouseButtonCallback mb;
-	private static ByteBuffer clearDepth;
+	private static ByteBuffer clearDepth, clearColor;
 	private static long window;
 	private static float time;
 	private static boolean grabbed, newtime = true;
@@ -273,7 +273,10 @@ public class GLHandler {
 		
 		// Other
 		clearDepth = je_malloc(4);
-		clearDepth.putFloat(0, 256);
+		clearDepth.putFloat(0, 1);
+		
+		clearColor = je_malloc(16);
+		clearColor.putFloat(12,1);
 	}
 	
 	private static void loadTextureArrayPart(String resource, int width, int height, int tiles, int startLayer) {
@@ -333,13 +336,18 @@ public class GLHandler {
 		glBindTexture(GL_TEXTURE_2D_ARRAY, blockTexture);
 	}
 	
-	public static void prepareScene() {
+	public static void prepareScene(float sunpower) {
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glUseProgram(baseShader);
 		glViewport(0,0,width,height);
 		glUniform1f(timeLoc, time);
 		newtime = true;
 		glBindTexture(GL_TEXTURE_2D_ARRAY, blockTexture);
+		glClearBufferfv(GL_DEPTH, 0, clearDepth);
+		clearColor.putFloat(0, 0.25f * sunpower);
+		clearColor.putFloat(4, 0.5f * sunpower);
+		clearColor.putFloat(8, 1 * sunpower);
+		glClearBufferfv(GL_COLOR, 0, clearColor);
 	}
 	
 	public static void prepareGUI() {

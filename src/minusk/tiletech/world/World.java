@@ -57,6 +57,8 @@ public class World {
 	private final Vector3i index3 = new Vector3i();
 	private final Vector<Vector3i> updateList = new Vector<>();
 	private final Vector<Vector3i> generatePoints = new Vector<>();
+	private final Vector3f sundir = new Vector3f((float) Math.random()*2-1, (float) Math.random()+1, (float) Math.random()*2-1).normalize(),
+			last = new Vector3f();
 	
 	public World() {
 		currentWorld = this;
@@ -167,9 +169,13 @@ public class World {
 	
 	public void tick() {
 		player.update();
+		last.set(sundir);
+		sundir.rotate(new Quaternionf(new AxisAngle4f(0.001f, 1, 0, 0)));
 	}
 	
 	public void renderWorld(float alpha) {
+		Vector3f effectiveSunDir = new Vector3f(last).mul(alpha).add(new Vector3f(sundir).mul(1-alpha)).normalize();
+		
 		lookaround.identity();
 		lookaround.lookAlong(player.look.x, player.look.y, player.look.z, 0, 1, 0);
 		Vector3f eye = player.getEye(alpha);
@@ -227,7 +233,7 @@ public class World {
 		for (int i = 0; i < 4; i++) {
 			GLHandler.prepareShadow(i);
 			shadowCam.setOrtho(-4*intpow(4,i), 4*intpow(4,i), -4*intpow(4,i), 4*intpow(4,i), 256, -256);
-			shadowCam.lookAlong(-0.440225f, 0.880451f, 0.17609f, 0, 1, 0);
+			shadowCam.lookAlong(effectiveSunDir.x, effectiveSunDir.y, effectiveSunDir.z, 0, 1, 0);
 			shadowCam.translate(-Math.round(eye.x), -Math.round(eye.y), -Math.round(eye.z));
 			
 			shadowCam.get(matrixUpload);
@@ -240,17 +246,19 @@ public class World {
 			});
 		}
 		shadowCam.setOrtho(-4, 4, -4, 4, 256, -256);
-		shadowCam.lookAlong(-0.440225f, 0.880451f, 0.17609f, 0, 1, 0);
+		shadowCam.lookAlong(effectiveSunDir.x, effectiveSunDir.y, effectiveSunDir.z, 0, 1, 0);
 		shadowCam.translate(-Math.round(eye.x), -Math.round(eye.y), -Math.round(eye.z));
 		shadowCam.get(matrixUpload);
 		
 		glCullFace(GL_BACK);
 		
-		GLHandler.prepareScene();
+		float sunpower = effectiveSunDir.dot(0, 1, 0) * 2;
+		sunpower = sunpower > 1 ? 1 : sunpower < 0 ? 0 : sunpower;
+		GLHandler.prepareScene(sunpower);
 		glUniformMatrix4fv(GLHandler.getSprojLoc(), false, matrixUpload.asFloatBuffer());
 		lookaround.get(matrixUpload);
 		glUniformMatrix4fv(GLHandler.getProjLoc(), false, matrixUpload.asFloatBuffer());
-		glUniform4f(GLHandler.getSundirLoc(), 0.440225f, 0.880451f, -0.17609f, 1);
+		glUniform4f(GLHandler.getSundirLoc(), -effectiveSunDir.x, effectiveSunDir.y, -effectiveSunDir.z, sunpower);
 		culler.set(lookaround);
 		
 		world.values().forEach(cp -> {
