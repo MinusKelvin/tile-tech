@@ -25,13 +25,13 @@ void main() {
 			step(texture(shadow1, shadowpos.xy * 0.5 + 0.5).r, shadowpos.z * 0.5 + 0.5 - 0.0001) * float(shadowpos.z <= 1);
 	shadowValue *= 1.0 - float(shadowpos.x > -4.0 && shadowpos.x < 4.0 && shadowpos.y > -4.0 && shadowpos.y < 4.0) *
 			float(shadowpos.x <= -1.0 || shadowpos.x >= 1.0 || shadowpos.y <= -1.0 || shadowpos.y >= 1.0) *
-			step(texture(shadow2, shadowpos.xy * 0.125 + 0.5).r, shadowpos.z * 0.5 + 0.5 - 0.0005) * float(shadowpos.z <= 1);
+			step(texture(shadow2, shadowpos.xy * 0.5/4.0 + 0.5).r, shadowpos.z * 0.5 + 0.5 - 0.0002) * float(shadowpos.z <= 1);
 	shadowValue *= 1.0 - float(shadowpos.x > -16.0 && shadowpos.x < 16.0 && shadowpos.y > -16.0 && shadowpos.y < 16.0) *
 			float(shadowpos.x <= -4.0 || shadowpos.x >= 4.0 || shadowpos.y <= -4.0 || shadowpos.y >= 4.0) *
-			step(texture(shadow3, shadowpos.xy * 0.03125 + 0.5).r, shadowpos.z * 0.5 + 0.5 - 0.001) * float(shadowpos.z <= 1);
+			step(texture(shadow3, shadowpos.xy * 0.5/16.0 + 0.5).r, shadowpos.z * 0.5 + 0.5 - 0.0005) * float(shadowpos.z <= 1);
 	shadowValue *= 1.0 - float(shadowpos.x > -64.0 && shadowpos.x < 64.0 && shadowpos.y > -64.0 && shadowpos.y < 64.0) *
 			float(shadowpos.x <= -16.0 || shadowpos.x >= 16.0 || shadowpos.y <= -16.0 || shadowpos.y >= 16.0) *
-			step(texture(shadow4, shadowpos.xy * 0.0078125 + 0.5).r, shadowpos.z * 0.5 + 0.5 - 0.001) * float(shadowpos.z <= 1);
-	color.rgb *= (min(1.0, 0.5 + min(max(0.0, cosTheta), shadowValue)) * sundir.w + 0.05) / 1.05;
+			step(texture(shadow4, shadowpos.xy * 0.5/64.0 + 0.5).r, shadowpos.z * 0.5 + 0.5 - 0.001) * float(shadowpos.z <= 1);
+	color.rgb *= (min(1.0, 0.5 + min(max(0.0, cosTheta), shadowValue)) * max(0.0, sundir.w-0.1) / 0.9 + 0.08) / 1.08;
 	color.rgb *= mix(mix(ao.x, ao.z, quad.x), mix(ao.y, ao.w, quad.x), quad.y);
 }

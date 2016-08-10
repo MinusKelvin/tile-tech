@@ -57,8 +57,7 @@ public class World {
 	private final Vector3i index3 = new Vector3i();
 	private final Vector<Vector3i> updateList = new Vector<>();
 	private final Vector<Vector3i> generatePoints = new Vector<>();
-	private final Vector3f sundir = new Vector3f((float) Math.random()*2-1, (float) Math.random()+1, (float) Math.random()*2-1).normalize(),
-			last = new Vector3f();
+	private final Vector3f sundir = new Vector3f(0, 1, 0.3f).normalize(), last = new Vector3f();
 	
 	public World() {
 		currentWorld = this;
@@ -170,7 +169,7 @@ public class World {
 	public void tick() {
 		player.update();
 		last.set(sundir);
-		sundir.rotate(new Quaternionf(new AxisAngle4f(0.001f, 1, 0, 0)));
+		sundir.rotate(new Quaternionf(new AxisAngle4f(0.000087266f, 0, 0, 1)));
 	}
 	
 	public void renderWorld(float alpha) {
