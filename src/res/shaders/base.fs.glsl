@@ -4,6 +4,7 @@ in vec3 texcoord;
 in vec3 normal;
 in vec2 quad;
 flat in vec4 ao;
+in vec4 c;
 in vec3 shadowpos;
 
 uniform sampler2DArray tex;
@@ -32,6 +33,8 @@ void main() {
 	shadowValue *= 1.0 - float(shadowpos.x > -64.0 && shadowpos.x < 64.0 && shadowpos.y > -64.0 && shadowpos.y < 64.0) *
 			float(shadowpos.x <= -16.0 || shadowpos.x >= 16.0 || shadowpos.y <= -16.0 || shadowpos.y >= 16.0) *
 			step(texture(shadow4, shadowpos.xy * 0.5/64.0 + 0.5).r, shadowpos.z * 0.5 + 0.5 - 0.001) * float(shadowpos.z <= 1);
-	color.rgb *= (min(1.0, 0.5 + min(max(0.0, cosTheta), shadowValue)) * max(0.0, sundir.w-0.1) / 0.9 + 0.08) / 1.08;
-	color.rgb *= mix(mix(ao.x, ao.z, quad.x), mix(ao.y, ao.w, quad.x), quad.y);
+	vec3 factor = vec3((min(1.0, 0.5 + min(max(0.0, cosTheta), shadowValue)) * max(0.0, sundir.w-0.1) / 0.9 + 0.08) / 1.08);
+	factor *= c.a /*mix(mix(c0.a, c2.a, quad.x), mix(c1.a, c3.a, quad.x), quad.y)*/;
+	factor += c.rgb /*mix(mix(c0.rgb, c2.rgb, quad.x), mix(c1.rgb, c3.rgb, quad.x), quad.y)*/ * (vec3(1.0)-factor);
+	color.rgb *= factor * mix(mix(ao.x, ao.z, quad.x), mix(ao.y, ao.w, quad.x), quad.y);
 }

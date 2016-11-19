@@ -2,6 +2,7 @@ package minusk.tiletech.world;
 
 import minusk.tiletech.world.structures.Cave;
 import minusk.tiletech.world.structures.Trees;
+import minusk.tiletech.world.tiles.Tile;
 import org.joml.FrustumIntersection;
 
 import java.util.List;
@@ -30,6 +31,16 @@ public class VerticalChunk {
 		}
 		for (int i = 0; i < 8; i++)
 			chunks[i] = new Chunk(x, i*32, z, dim, highPoints, nearbySegments);
+		
+		for (int i = 0; i < 32; i++) {
+			for (int j = 0; j < 32; j++) {
+				for (int k = 255; k >= 0; k--) {
+					if (chunks[k >> 5].getTile(i, k & 0x1F, j) != Tile.Air.id)
+						break;
+					chunks[k >> 5].setLight(i, k & 0x1F, j, World.LIGHT_SUN, 15);
+				}
+			}
+		}
 	}
 	
 	public void generate() {

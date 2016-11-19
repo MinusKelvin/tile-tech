@@ -1,13 +1,14 @@
 package minusk.tiletech.world.tiles.standard;
 
-import minusk.tiletech.world.tiles.Tile;
+import minusk.tiletech.world.World;
 import minusk.tiletech.world.entities.Entity;
+import minusk.tiletech.world.tiles.Tile;
 import org.joml.RayAabIntersection;
 
 import java.nio.ByteBuffer;
 
 import static minusk.tiletech.render.FaceRenderer.*;
-import static minusk.tiletech.utils.Util.*;
+import static minusk.tiletech.utils.Util.cnkIdx;
 
 /**
  * Created by MinusKelvin on 2/11/16.
@@ -41,7 +42,7 @@ public abstract class StandardTile extends Tile {
 		int verts = 0;
 		
 		if (blocks[1][0][1].isTransparentSouth(x,y,z-1,dim)) {
-			int aoBits = 0;
+			int aoBits = 0, light0 = 0, light1 = 0, light2 = 0, light3 = 0;
 			
 			if (blocks[1][0][2].contributesAO(x,y+1,z-1,dim))
 				aoBits |= 1;
@@ -60,11 +61,16 @@ public abstract class StandardTile extends Tile {
 			if (blocks[0][0][2].contributesAO(x-1,y+1,z-1,dim))
 				aoBits |= 128;
 			
-			verts += renderNorthFace(vertices, aoBits, x, y, z, north, wavy);
+			int l = World.getWorld().getLight(x,y,z-1,0,World.LIGHT_SUN) << 28 |
+					World.getWorld().getLight(x,y,z-1,0,World.LIGHT_RED) << 20 |
+					World.getWorld().getLight(x,y,z-1,0,World.LIGHT_GREEN) << 12 |
+					World.getWorld().getLight(x,y,z-1,0,World.LIGHT_BLUE) << 4;
+			
+			verts += renderNorthFace(vertices, aoBits, x, y, z, north, wavy, /*light0, light1, light2, light3*/ l,l,l,l);
 		}
 		
 		if (blocks[1][2][1].isTransparentNorth(x,y,z+1,dim)) {
-			int aoBits = 0;
+			int aoBits = 0, light0 = 0, light1 = 0, light2 = 0, light3 = 0;
 			
 			if (blocks[1][2][2].contributesAO(x,y+1,z+1,dim))
 				aoBits |= 1;
@@ -83,11 +89,16 @@ public abstract class StandardTile extends Tile {
 			if (blocks[2][2][2].contributesAO(x+1,y+1,z+1,dim))
 				aoBits |= 128;
 			
-			verts += renderSouthFace(vertices, aoBits, x, y, z, south, wavy);
+			int l = World.getWorld().getLight(x,y,z+1,0,World.LIGHT_SUN) << 28 |
+					World.getWorld().getLight(x,y,z+1,0,World.LIGHT_RED) << 20 |
+					World.getWorld().getLight(x,y,z+1,0,World.LIGHT_GREEN) << 12 |
+					World.getWorld().getLight(x,y,z+1,0,World.LIGHT_BLUE) << 4;
+			
+			verts += renderSouthFace(vertices, aoBits, x, y, z, south, wavy, /*light0, light1, light2, light3*/ l,l,l,l);
 		}
 		
 		if (blocks[0][1][1].isTransparentEast(x-1,y,z,dim)) {
-			int aoBits = 0;
+			int aoBits = 0, light0 = 0, light1 = 0, light2 = 0, light3 = 0;
 			
 			if (blocks[0][1][2].contributesAO(x-1,y+1,z,dim))
 				aoBits |= 1;
@@ -106,11 +117,16 @@ public abstract class StandardTile extends Tile {
 			if (blocks[0][2][2].contributesAO(x-1,y+1,z+1,dim))
 				aoBits |= 128;
 			
-			verts += renderWestFace(vertices, aoBits, x, y, z, west, wavy);
+			int l = World.getWorld().getLight(x-1,y,z,0,World.LIGHT_SUN) << 28 |
+					World.getWorld().getLight(x-1,y,z,0,World.LIGHT_RED) << 20 |
+					World.getWorld().getLight(x-1,y,z,0,World.LIGHT_GREEN) << 12 |
+					World.getWorld().getLight(x-1,y,z,0,World.LIGHT_BLUE) << 4;
+			
+			verts += renderWestFace(vertices, aoBits, x, y, z, west, wavy, /*light0, light1, light2, light3*/ l,l,l,l);
 		}
 		
 		if (blocks[2][1][1].isTransparentWest(x+1,y,z,dim)) {
-			int aoBits = 0;
+			int aoBits = 0, light0 = 0, light1 = 0, light2 = 0, light3 = 0;
 			
 			if (blocks[2][1][2].contributesAO(x+1,y+1,z,dim))
 				aoBits |= 1;
@@ -129,11 +145,16 @@ public abstract class StandardTile extends Tile {
 			if (blocks[2][0][2].contributesAO(x+1,y+1,z-1,dim))
 				aoBits |= 128;
 			
-			verts += renderEastFace(vertices, aoBits, x, y, z, east, wavy);
+			int l = World.getWorld().getLight(x+1,y,z,0,World.LIGHT_SUN) << 28 |
+					World.getWorld().getLight(x+1,y,z,0,World.LIGHT_RED) << 20 |
+					World.getWorld().getLight(x+1,y,z,0,World.LIGHT_GREEN) << 12 |
+					World.getWorld().getLight(x+1,y,z,0,World.LIGHT_BLUE) << 4;
+			
+			verts += renderEastFace(vertices, aoBits, x, y, z, east, wavy, /*light0, light1, light2, light3*/ l,l,l,l);
 		}
 		
 		if (blocks[1][1][0].isTransparentTop(x,y-1,z,dim)) {
-			int aoBits = 0;
+			int aoBits = 0, light0 = 0, light1 = 0, light2 = 0, light3 = 0;
 			
 			if (blocks[1][0][0].contributesAO(x,y-1,z+1,dim))
 				aoBits |= 1;
@@ -152,11 +173,16 @@ public abstract class StandardTile extends Tile {
 			if (blocks[0][0][0].contributesAO(x+1,y-1,z+1,dim))
 				aoBits |= 128;
 			
-			verts += renderBottomFace(vertices, aoBits, x, y, z, bottom, wavy);
+			int l = World.getWorld().getLight(x,y-1,z,0,World.LIGHT_SUN) << 28 |
+					World.getWorld().getLight(x,y-1,z,0,World.LIGHT_RED) << 20 |
+					World.getWorld().getLight(x,y-1,z,0,World.LIGHT_GREEN) << 12 |
+					World.getWorld().getLight(x,y-1,z,0,World.LIGHT_BLUE) << 4;
+			
+			verts += renderBottomFace(vertices, aoBits, x, y, z, bottom, wavy, /*light0, light1, light2, light3*/ l,l,l,l);
 		}
 		
 		if (blocks[1][1][2].isTransparentBottom(x,y+1,z,dim)) {
-			int aoBits = 0;
+			int aoBits = 0, light0 = 0, light1 = 0, light2 = 0, light3 = 0;
 			
 			if (blocks[1][2][2].contributesAO(x,y+1,z+1,dim))
 				aoBits |= 1;
@@ -175,7 +201,12 @@ public abstract class StandardTile extends Tile {
 			if (blocks[0][2][2].contributesAO(x-1,y+1,z+1,dim))
 				aoBits |= 128;
 			
-			verts += renderTopFace(vertices, aoBits, x, y, z, top, wavy);
+			int l = World.getWorld().getLight(x,y+1,z,0,World.LIGHT_SUN) << 28 |
+					World.getWorld().getLight(x,y+1,z,0,World.LIGHT_RED) << 20 |
+					World.getWorld().getLight(x,y+1,z,0,World.LIGHT_GREEN) << 12 |
+					World.getWorld().getLight(x,y+1,z,0,World.LIGHT_BLUE) << 4;
+			
+			verts += renderTopFace(vertices, aoBits, x, y, z, top, wavy, /*light0, light1, light2, light3*/ l,l,l,l);
 		}
 		
 		return verts;

@@ -218,6 +218,7 @@ public class GLHandler {
 		float maxAniso = 1;
 		if (capabilities.GL_EXT_texture_filter_anisotropic)
 			maxAniso = glGetFloat(EXTTextureFilterAnisotropic.GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT);
+		System.out.println(maxAniso);
 		
 		// Block textures
 		blockTexture = glGenTextures();

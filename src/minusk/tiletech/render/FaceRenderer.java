@@ -15,7 +15,7 @@ public final class FaceRenderer {
 		return 255 - (factor * 48);
 	}
 	
-	public static int renderWestFace(ByteBuffer vertices, int aoBits, int x, int y, int z, int faceID, float wavy) {
+	public static int renderWestFace(ByteBuffer vertices, int aoBits, int x, int y, int z, int faceID, float wavy, int l0, int l1, int l2, int l3) {
 		int[] vals = {255,255,255,255};
 		
 		vals[0] = vertexAO((aoBits & 64) != 0, (aoBits & 16) != 0, (aoBits & 32) != 0);
@@ -40,6 +40,10 @@ public final class FaceRenderer {
 		vertices.put((byte) vals[1]);  // AO 2
 		vertices.put((byte) vals[2]);  // AO 3
 		vertices.put((byte) vals[3]);  // AO 4
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		vertices.putFloat(x);
 		vertices.putFloat(y);
@@ -58,6 +62,10 @@ public final class FaceRenderer {
 		vertices.put((byte) vals[1]);
 		vertices.put((byte) vals[2]);
 		vertices.put((byte) vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		vertices.putFloat(x);
 		vertices.putFloat(y + 1.0f);
@@ -76,6 +84,10 @@ public final class FaceRenderer {
 		vertices.put((byte) vals[1]);
 		vertices.put((byte) vals[2]);
 		vertices.put((byte) vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		vertices.putFloat(x);
 		vertices.putFloat(y + 1.0f);
@@ -94,6 +106,10 @@ public final class FaceRenderer {
 		vertices.put((byte) vals[1]);
 		vertices.put((byte) vals[2]);
 		vertices.put((byte) vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		vertices.putFloat(x);
 		vertices.putFloat(y + 1.0f);
@@ -112,6 +128,10 @@ public final class FaceRenderer {
 		vertices.put((byte) vals[1]);
 		vertices.put((byte) vals[2]);
 		vertices.put((byte) vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		vertices.putFloat(x);
 		vertices.putFloat(y);
@@ -130,11 +150,15 @@ public final class FaceRenderer {
 		vertices.put((byte) vals[1]);
 		vertices.put((byte) vals[2]);
 		vertices.put((byte) vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		return 6;
 	}
 	
-	public static int renderEastFace(ByteBuffer vertices, int aoBits, int x, int y, int z, int faceID, float wavy) {
+	public static int renderEastFace(ByteBuffer vertices, int aoBits, int x, int y, int z, int faceID, float wavy, int l0, int l1, int l2, int l3) {
 		int[] vals = {255,255,255,255};
 		
 		vals[0] = vertexAO((aoBits & 64) != 0, (aoBits & 16) != 0, (aoBits & 32) != 0);
@@ -159,6 +183,10 @@ public final class FaceRenderer {
 		vertices.put((byte) vals[1]);
 		vertices.put((byte) vals[2]);
 		vertices.put((byte) vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		vertices.putFloat(x + 1.0f);
 		vertices.putFloat(y);
@@ -177,6 +205,10 @@ public final class FaceRenderer {
 		vertices.put((byte) vals[1]);
 		vertices.put((byte) vals[2]);
 		vertices.put((byte) vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		vertices.putFloat(x + 1.0f);
 		vertices.putFloat(y + 1.0f);
@@ -195,6 +227,10 @@ public final class FaceRenderer {
 		vertices.put((byte) vals[1]);
 		vertices.put((byte) vals[2]);
 		vertices.put((byte) vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		vertices.putFloat(x + 1.0f);
 		vertices.putFloat(y + 1.0f);
@@ -213,6 +249,10 @@ public final class FaceRenderer {
 		vertices.put((byte) vals[1]);
 		vertices.put((byte) vals[2]);
 		vertices.put((byte) vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		vertices.putFloat(x + 1.0f);
 		vertices.putFloat(y + 1.0f);
@@ -231,6 +271,10 @@ public final class FaceRenderer {
 		vertices.put((byte) vals[1]);
 		vertices.put((byte) vals[2]);
 		vertices.put((byte) vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		vertices.putFloat(x + 1.0f);
 		vertices.putFloat(y);
@@ -249,11 +293,15 @@ public final class FaceRenderer {
 		vertices.put((byte) vals[1]);
 		vertices.put((byte) vals[2]);
 		vertices.put((byte) vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		return 6;
 	}
 	
-	public static int renderNorthFace(ByteBuffer vertices, int aoBits, int x, int y, int z, int faceID, float wavy) {
+	public static int renderNorthFace(ByteBuffer vertices, int aoBits, int x, int y, int z, int faceID, float wavy, int l0, int l1, int l2, int l3) {
 		int[] vals = {255,255,255,255};
 		
 		vals[0] = vertexAO((aoBits & 64) != 0, (aoBits & 16) != 0, (aoBits & 32) != 0);
@@ -278,6 +326,10 @@ public final class FaceRenderer {
 		vertices.put((byte) vals[1]);
 		vertices.put((byte) vals[2]);
 		vertices.put((byte) vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		vertices.putFloat(x + 1.0f);
 		vertices.putFloat(y);
@@ -296,6 +348,10 @@ public final class FaceRenderer {
 		vertices.put((byte) vals[1]);
 		vertices.put((byte) vals[2]);
 		vertices.put((byte) vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		vertices.putFloat(x);
 		vertices.putFloat(y + 1.0f);
@@ -314,6 +370,10 @@ public final class FaceRenderer {
 		vertices.put((byte) vals[1]);
 		vertices.put((byte) vals[2]);
 		vertices.put((byte) vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		vertices.putFloat(x + 1.0f);
 		vertices.putFloat(y + 1.0f);
@@ -332,6 +392,10 @@ public final class FaceRenderer {
 		vertices.put((byte) vals[1]);
 		vertices.put((byte) vals[2]);
 		vertices.put((byte) vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		vertices.putFloat(x);
 		vertices.putFloat(y + 1.0f);
@@ -350,6 +414,10 @@ public final class FaceRenderer {
 		vertices.put((byte) vals[1]);
 		vertices.put((byte) vals[2]);
 		vertices.put((byte) vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		vertices.putFloat(x + 1.0f);
 		vertices.putFloat(y);
@@ -368,11 +436,15 @@ public final class FaceRenderer {
 		vertices.put((byte) vals[1]);
 		vertices.put((byte) vals[2]);
 		vertices.put((byte) vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		return 6;
 	}
 	
-	public static int renderSouthFace(ByteBuffer vertices, int aoBits, int x, int y, int z, int faceID, float wavy) {
+	public static int renderSouthFace(ByteBuffer vertices, int aoBits, int x, int y, int z, int faceID, float wavy, int l0, int l1, int l2, int l3) {
 		int[] vals = {255,255,255,255};
 		
 		vals[0] = vertexAO((aoBits & 64) != 0, (aoBits & 16) != 0, (aoBits & 32) != 0);
@@ -397,6 +469,10 @@ public final class FaceRenderer {
 		vertices.put((byte) vals[1]);
 		vertices.put((byte) vals[2]);
 		vertices.put((byte) vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		vertices.putFloat(x);
 		vertices.putFloat(y);
@@ -415,6 +491,10 @@ public final class FaceRenderer {
 		vertices.put((byte) vals[1]);
 		vertices.put((byte) vals[2]);
 		vertices.put((byte) vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		vertices.putFloat(x + 1.0f);
 		vertices.putFloat(y + 1.0f);
@@ -433,6 +513,10 @@ public final class FaceRenderer {
 		vertices.put((byte) vals[1]);
 		vertices.put((byte) vals[2]);
 		vertices.put((byte) vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		vertices.putFloat(x);
 		vertices.putFloat(y + 1.0f);
@@ -451,6 +535,10 @@ public final class FaceRenderer {
 		vertices.put((byte) vals[1]);
 		vertices.put((byte) vals[2]);
 		vertices.put((byte) vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		vertices.putFloat(x + 1.0f);
 		vertices.putFloat(y + 1.0f);
@@ -469,6 +557,10 @@ public final class FaceRenderer {
 		vertices.put((byte) vals[1]);
 		vertices.put((byte) vals[2]);
 		vertices.put((byte) vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		vertices.putFloat(x);
 		vertices.putFloat(y);
@@ -487,11 +579,15 @@ public final class FaceRenderer {
 		vertices.put((byte) vals[1]);
 		vertices.put((byte) vals[2]);
 		vertices.put((byte) vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		return 6;
 	}
 	
-	public static int renderTopFace(ByteBuffer vertices, int aoBits, int x, int y, int z, int faceID, float wavy) {
+	public static int renderTopFace(ByteBuffer vertices, int aoBits, int x, int y, int z, int faceID, float wavy, int l0, int l1, int l2, int l3) {
 		int[] vals = {255,255,255,255};
 		
 		vals[0] = vertexAO((aoBits & 64) != 0, (aoBits & 16) != 0, (aoBits & 32) != 0);
@@ -516,6 +612,10 @@ public final class FaceRenderer {
 		vertices.put((byte)vals[1]);
 		vertices.put((byte)vals[2]);
 		vertices.put((byte)vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		vertices.putFloat(x + 1.0f);
 		vertices.putFloat(y + 1.0f);
@@ -534,6 +634,10 @@ public final class FaceRenderer {
 		vertices.put((byte)vals[1]);
 		vertices.put((byte)vals[2]);
 		vertices.put((byte)vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		vertices.putFloat(x);
 		vertices.putFloat(y + 1.0f);
@@ -552,6 +656,10 @@ public final class FaceRenderer {
 		vertices.put((byte)vals[1]);
 		vertices.put((byte)vals[2]);
 		vertices.put((byte)vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		vertices.putFloat(x + 1.0f);
 		vertices.putFloat(y + 1.0f);
@@ -570,6 +678,10 @@ public final class FaceRenderer {
 		vertices.put((byte)vals[1]);
 		vertices.put((byte)vals[2]);
 		vertices.put((byte)vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		vertices.putFloat(x);
 		vertices.putFloat(y + 1.0f);
@@ -588,6 +700,10 @@ public final class FaceRenderer {
 		vertices.put((byte)vals[1]);
 		vertices.put((byte)vals[2]);
 		vertices.put((byte)vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		vertices.putFloat(x + 1.0f);
 		vertices.putFloat(y + 1.0f);
@@ -606,11 +722,15 @@ public final class FaceRenderer {
 		vertices.put((byte)vals[1]);
 		vertices.put((byte)vals[2]);
 		vertices.put((byte)vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		return 6;
 	}
 	
-	public static int renderBottomFace(ByteBuffer vertices, int aoBits, int x, int y, int z, int faceID, float wavy) {
+	public static int renderBottomFace(ByteBuffer vertices, int aoBits, int x, int y, int z, int faceID, float wavy, int l0, int l1, int l2, int l3) {
 		int[] vals = {255,255,255,255};
 		
 		vals[0] = vertexAO((aoBits & 64) != 0, (aoBits & 16) != 0, (aoBits & 32) != 0);
@@ -635,6 +755,10 @@ public final class FaceRenderer {
 		vertices.put((byte) vals[1]);
 		vertices.put((byte) vals[2]);
 		vertices.put((byte) vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		vertices.putFloat(x + 1.0f);
 		vertices.putFloat(y);
@@ -653,6 +777,10 @@ public final class FaceRenderer {
 		vertices.put((byte) vals[1]);
 		vertices.put((byte) vals[2]);
 		vertices.put((byte) vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		vertices.putFloat(x);
 		vertices.putFloat(y);
@@ -671,6 +799,10 @@ public final class FaceRenderer {
 		vertices.put((byte) vals[1]);
 		vertices.put((byte) vals[2]);
 		vertices.put((byte) vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		vertices.putFloat(x + 1.0f);
 		vertices.putFloat(y);
@@ -689,6 +821,10 @@ public final class FaceRenderer {
 		vertices.put((byte) vals[1]);
 		vertices.put((byte) vals[2]);
 		vertices.put((byte) vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		vertices.putFloat(x);
 		vertices.putFloat(y);
@@ -707,6 +843,10 @@ public final class FaceRenderer {
 		vertices.put((byte) vals[1]);
 		vertices.put((byte) vals[2]);
 		vertices.put((byte) vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		vertices.putFloat(x + 1.0f);
 		vertices.putFloat(y);
@@ -725,6 +865,10 @@ public final class FaceRenderer {
 		vertices.put((byte) vals[1]);
 		vertices.put((byte) vals[2]);
 		vertices.put((byte) vals[3]);
+		vertices.putInt(l0);           // Color 0
+//		vertices.putInt(l1);           // Color 1
+//		vertices.putInt(l2);           // Color 2
+//		vertices.putInt(l3);           // Color 3
 		
 		return 6;
 	}

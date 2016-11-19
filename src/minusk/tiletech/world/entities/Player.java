@@ -3,19 +3,20 @@ package minusk.tiletech.world.entities;
 import minusk.tiletech.render.FaceRenderer;
 import minusk.tiletech.render.GLHandler;
 import minusk.tiletech.utils.DirectionalBoolean;
-import minusk.tiletech.world.tiles.Tile;
+import minusk.tiletech.world.Chunk;
 import minusk.tiletech.world.World;
+import minusk.tiletech.world.tiles.Tile;
 import org.joml.Vector3f;
 
 import java.nio.ByteBuffer;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL11.GL_TRIANGLES;
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
 import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
-import static org.lwjgl.system.jemalloc.JEmalloc.*;
+import static org.lwjgl.system.jemalloc.JEmalloc.je_calloc;
+import static org.lwjgl.system.jemalloc.JEmalloc.je_free;
 
 /**
  * Created by MinusKelvin on 1/26/16.
@@ -94,36 +95,44 @@ public class Player extends Entity {
 		if (raytrace == null)
 			return;
 		
-		ByteBuffer buffer = je_calloc(44,36);
+		ByteBuffer buffer = je_calloc(Chunk.BYTES_PER_VERTEX,36);
 		
 		if (raytrace.side.up)
-			FaceRenderer.renderTopFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 8, 0);
+			FaceRenderer.renderTopFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 8, 0, 0xffffff, 0xffffff, 0xffffff, 0xffffff);
 		else if (raytrace.side.down)
-			FaceRenderer.renderBottomFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 8, 0);
+			FaceRenderer.renderBottomFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 8, 0, 0xffffff, 0xffffff, 0xffffff, 0xffffff);
 		else if (raytrace.side.west)
-			FaceRenderer.renderWestFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 8, 0);
+			FaceRenderer.renderWestFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 8, 0, 0xffffff, 0xffffff, 0xffffff, 0xffffff);
 		else if (raytrace.side.east)
-			FaceRenderer.renderEastFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 8, 0);
+			FaceRenderer.renderEastFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 8, 0, 0xffffff, 0xffffff, 0xffffff, 0xffffff);
 		else if (raytrace.side.north)
-			FaceRenderer.renderNorthFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 8, 0);
+			FaceRenderer.renderNorthFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 8, 0, 0xffffff, 0xffffff, 0xffffff, 0xffffff);
 		else if (raytrace.side.south)
-			FaceRenderer.renderSouthFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 8, 0);
+			FaceRenderer.renderSouthFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 8, 0, 0xffffff, 0xffffff, 0xffffff, 0xffffff);
 		
 		buffer.position(0);
 		
 		glBindBuffer(GL_ARRAY_BUFFER, this.buffer);
 		glBufferData(GL_ARRAY_BUFFER, buffer, GL_STREAM_DRAW);
 		
-		glVertexAttribPointer(0, 3, GL_FLOAT, false, 44, 0);
-		glVertexAttribPointer(1, 3, GL_FLOAT, false, 44, 12);
-		glVertexAttribPointer(2, 3, GL_FLOAT, false, 44, 24);
-		glVertexAttribPointer(3, 2, GL_UNSIGNED_SHORT, true, 44, 36);
-		glVertexAttribPointer(4, 4, GL_UNSIGNED_BYTE, true, 44, 40);
+		glVertexAttribPointer(0, 3, GL_FLOAT, false, Chunk.BYTES_PER_VERTEX, 0);
+		glVertexAttribPointer(1, 3, GL_FLOAT, false, Chunk.BYTES_PER_VERTEX, 12);
+		glVertexAttribPointer(2, 3, GL_FLOAT, false, Chunk.BYTES_PER_VERTEX, 24);
+		glVertexAttribPointer(3, 2, GL_UNSIGNED_SHORT, true, Chunk.BYTES_PER_VERTEX, 36);
+		glVertexAttribPointer(4, 4, GL_UNSIGNED_BYTE, true, Chunk.BYTES_PER_VERTEX, 40);
+		glVertexAttribPointer(5, 4, GL_UNSIGNED_BYTE, true, Chunk.BYTES_PER_VERTEX, 44); // Color v0
+//		glVertexAttribPointer(6, 4, GL_UNSIGNED_BYTE, true, Chunk.BYTES_PER_VERTEX, 48); // Color v1
+//		glVertexAttribPointer(7, 4, GL_UNSIGNED_BYTE, true, Chunk.BYTES_PER_VERTEX, 52); // Color v2
+//		glVertexAttribPointer(8, 4, GL_UNSIGNED_BYTE, true, Chunk.BYTES_PER_VERTEX, 56); // Color v3
 		glEnableVertexAttribArray(0);
 		glEnableVertexAttribArray(1);
 		glEnableVertexAttribArray(2);
 		glEnableVertexAttribArray(3);
 		glEnableVertexAttribArray(4);
+		glEnableVertexAttribArray(5);
+//		glEnableVertexAttribArray(6);
+//		glEnableVertexAttribArray(7);
+//		glEnableVertexAttribArray(8);
 		
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		

@@ -8,6 +8,7 @@ import minusk.tiletech.world.structures.Cave;
 import minusk.tiletech.world.tiles.Tile;
 import org.joml.*;
 
+import java.lang.Math;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,14 +33,10 @@ public class World {
 	private static World currentWorld;
 	
 	// Yes, my lighting system is weird as heck
-	public static final int LIGHT_WHITE = 0;
-	public static final int LIGHT_CYAN = 1;
-	public static final int LIGHT_MAGENTA = 2;
-	public static final int LIGHT_YELLOW = 3;
-	public static final int LIGHT_BLUE = 4;
-	public static final int LIGHT_GREEN = 5;
-	public static final int LIGHT_RED = 6;
-	public static final int LIGHT_SUN = 7;
+	public static final int LIGHT_RED = 0;
+	public static final int LIGHT_GREEN = 1;
+	public static final int LIGHT_BLUE = 2;
+	public static final int LIGHT_SUN = 3;
 	
 	public final Player player = new Player();
 	public final long seed = 534634958076L;
@@ -100,6 +97,8 @@ public class World {
 	
 	public int getLight(int x, int y, int z, int dim, int channel) {
 		Chunk chunk = getChunk(getCnk(x), getCnk(y), getCnk(z), dim);
+		if (chunk == null)
+			return 0;
 		return chunk.getLight(cnkIdx(x),cnkIdx(y),cnkIdx(z), channel);
 	}
 	
@@ -323,7 +322,8 @@ public class World {
 		Cave cave = new Cave();
 		Random rng = new Random(seed + x*17317 + z*5557);
 		int segcount = (int) ((rng.nextDouble()+0.25)*48);
-		Vector3f pos = new Vector3f(x*32+rng.nextInt(32), rng.nextInt(256), z*32+rng.nextInt(32));
+		float h = rng.nextInt(256);
+		Vector3f pos = new Vector3f(x*32+rng.nextInt(32), (h*h)/256, z*32+rng.nextInt(32));
 		for (int i = 0; i < segcount; i++) {
 			Vector3f p = new Vector3f(pos);
 			pos.x += noise3.eval(x*4, z-26, i/8.0) * 10;
