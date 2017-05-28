@@ -20,14 +20,18 @@ import static org.lwjgl.system.jemalloc.JEmalloc.je_realloc;
 /**
  * Created by MinusKelvin on 1/25/16.
  */
-public class Chunk {
+public final class Chunk {
 	public static final int BYTES_PER_VERTEX = 48;
+	public static final int CHUNK_SIZE = 32;
 	
 	// Note: All of these block arrays are [x][z][y]
 	// SSSS RRRR GGGG BBBB + 16 bits ID
-	int[][][] blockdata = new int[32][32][32];
+	/** One-dimensional to avoid additional array allocations. Access through provided methods. */
+	private int[] blockdata = new int[CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE];
 	HashMap<Vector3i, Object> blockMeta = new HashMap<>(32);
-	private int vbo = -1, verts, x,y,z,dim;
+	/** World space */
+	private int x,y,z;
+	private int vbo = -1, verts, dim;
 	boolean needsUpdate = false;
 	
 	public Chunk(int x, int y, int z, int dim, int[][] hs, List<Cave.Segment> nearbySegments) {
@@ -36,19 +40,20 @@ public class Chunk {
 		this.z = z;
 		this.dim = dim;
 		
+		// i = x, j = z, k = y
 		for (int i = 0; i < 32; i++) {
 			for (int j = 0; j < 32; j++) {
 				for (int k = 0; k < 32; k++) {
 					if (k+y == 0)
-						blockdata[i][j][k] = Tile.Bedrock.id & 0xFFFF;
+						rawSetTile(i,k,j, Tile.Bedrock.id);
 					else if (k + y > hs[i][j] || inCave(x+i,y+k,z+j,nearbySegments))
-						blockdata[i][j][k] = Tile.Air.id & 0xFFFF;
+						rawSetTile(i,k,j, Tile.Air.id);
 					else if (k + y == hs[i][j])
-						blockdata[i][j][k] = Tile.Grass.id & 0xFFFF;
+						rawSetTile(i,k,j, Tile.Grass.id);
 					else if (k+y >= hs[i][j]-3)
-						blockdata[i][j][k] = Tile.Dirt.id & 0xFFFF;
+						rawSetTile(i,k,j, Tile.Dirt.id);
 					else
-						blockdata[i][j][k] = Tile.Stone.id & 0xFFFF;
+						rawSetTile(i,k,j, Tile.Stone.id);
 				}
 			}
 		}
@@ -69,16 +74,20 @@ public class Chunk {
 	private static ByteBuffer data = je_malloc(maxVerts*BYTES_PER_VERTEX);
 	private static Tile[][][] chunkEdges = new Tile[34][34][34];
 	
+	/**
+	 * Updates this {@code Chunk}'s vertex buffer.
+	 */
 	void updateVBO() {
 		double t = glfwGetTime();
 		
 		verts = 0;
 		data.position(0);
 		
+		// i = x, j = z, k = y
 		for (int i = 0; i < 32; i++) {
 			for (int j = 0; j < 32; j++) {
 				for (int k = 0; k < 32; k++)
-					chunkEdges[i + 1][j + 1][k + 1] = Tile.getTile(blockdata[i][j][k] & 0xFFFF);
+					chunkEdges[i + 1][j + 1][k + 1] = Tile.getTile(getTile(i,k,j) & 0xFFFF);
 				if (y != 0) chunkEdges[i+1][j+1][0] = World.getWorld().getTile(x+i,y-1,z+j,dim);
 				else chunkEdges[i+1][j+1][0] = Tile.Bedrock;
 				chunkEdges[i+1][j+1][33] = World.getWorld().getTile(x+i,y+32,z+j,dim);
@@ -195,43 +204,85 @@ public class Chunk {
 		glDrawArrays(GL_TRIANGLES, 0, verts);
 	}
 	
+	/**
+	 * Sets the tile at the specified position to the specified type id.
+	 * This method calls the relevant delete and create methods, and requests that the chunk and its neighbours be re-rendered.
+	 * To set a tile without calling any of these, use {@link Chunk#rawSetTile}.
+	 */
 	public void setTile(int x, int y, int z, short id) {
-		if (blockdata == null)
-			blockdata = new int[32][32][32];
-		Tile.getTile(blockdata[x][z][y] & 0xFFFF).onDelete(x+this.x, y+this.y, z+this.z, dim);
-		blockdata[x][z][y] &= ~0xFFFF;
-		blockdata[x][z][y] |= id & 0xFFFF;
+		Tile.getTile(getTile(x,y,z) & 0xFFFF).onDelete(x+this.x, y+this.y, z+this.z, dim);
+		blockdata[x*CHUNK_SIZE*CHUNK_SIZE + z*CHUNK_SIZE + y] &= ~0xFFFF;
+		blockdata[x*CHUNK_SIZE*CHUNK_SIZE + z*CHUNK_SIZE + y] |= id & 0xFFFF;
 		blockMeta.remove(new Vector3i(x,y,z));
 		Tile.getTile(id).onCreate(x+this.x, y+this.y, z+this.z, dim);
 		for (int i = -1; i < 2; i++)
 			for (int j = -1; j < 2; j++)
 				for (int k = -1; k < 2; k++)
 					World.getWorld().requestChunkRender(i+getCnk(x+this.x), k+getCnk(y+this.y), j+getCnk(z+this.z), dim);
+		World.getWorld().requestLightUpdate(this.x + x, this.y + y, this.z + z, dim);
 	}
 	
 	public short getTile(int x, int y, int z) {
 		if (blockdata == null)
 			return 0;
-		return (short) blockdata[x][z][y];
+		return (short) blockdata[x*CHUNK_SIZE*CHUNK_SIZE + z*CHUNK_SIZE + y];
 	}
 	
+	/**
+	 * Do not use unless you know what you're doing.
+	 */
 	public void rawSetTile(int x, int y, int z, short id) {
 		if (blockdata == null)
-			blockdata = new int[32][32][32];
-		blockdata[x][z][y] &= ~0xFFFF;
-		blockdata[x][z][y] |= id & 0xFFFF;
+			blockdata = new int[CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE];
+		blockdata[x*CHUNK_SIZE*CHUNK_SIZE + z*CHUNK_SIZE + y] = id & 0xFFFF;
 	}
 	
-	public int getLight(int x, int y, int z, int channel) {
+	public int getLight(int x, int y, int z, LightChannel channel) {
 		if (blockdata == null)
 			return 0;
-		return blockdata[x][z][y] >> channel*4+16 & 0xF;
+		if (channel == null)
+			return blockdata[x*CHUNK_SIZE*CHUNK_SIZE + z*CHUNK_SIZE + y] >> 16 & 0xFFFF;
+		return blockdata[x*CHUNK_SIZE*CHUNK_SIZE + z*CHUNK_SIZE + y] >> channel.getShiftAmmount()+16 & 0xF;
 	}
 	
-	public void setLight(int x, int y, int z, int channel, int amount) {
+	/**
+	 * Sets the light value for the specified light channel.
+	 * 
+	 * @param amount The light amount, ranging from 0 to 15
+	 */
+	void setLight(int x, int y, int z, LightChannel channel, int amount) {
+		if (rawSetLight(x, y, z, channel, amount)) {
+			World.getWorld().requestLightUpdate(this.x + x, this.y + y, this.z + z - 1, dim);
+			World.getWorld().requestLightUpdate(this.x + x, this.y + y, this.z + z + 1, dim);
+			World.getWorld().requestLightUpdate(this.x + x, this.y + y - 1, this.z + z, dim);
+			World.getWorld().requestLightUpdate(this.x + x, this.y + y + 1, this.z + z, dim);
+			World.getWorld().requestLightUpdate(this.x + x - 1, this.y + y, this.z + z, dim);
+			World.getWorld().requestLightUpdate(this.x + x + 1, this.y + y, this.z + z, dim);
+			for (int i = -1; i < 2; i++)
+				for (int j = -1; j < 2; j++)
+					for (int k = -1; k < 2; k++)
+						World.getWorld().requestChunkRender(i+getCnk(x+this.x), k+getCnk(y+this.y), j+getCnk(z+this.z), dim);
+		}
+	}
+	
+	/**
+	 * Do not use unless you know what you're doing.
+	 * Returns true if the light value changed.
+	 */
+	boolean rawSetLight(int x, int y, int z, LightChannel channel, int amount) {
 		if (blockdata == null)
-			blockdata = new int[32][32][32];
-		blockdata[x][z][y] &= ~(0xF << channel*4+16);
-		blockdata[x][z][y] |= (0xF & amount) << channel*4+16;
+			blockdata = new int[CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE];
+		if (channel == null) {
+			if (amount == blockdata[x * CHUNK_SIZE * CHUNK_SIZE + z * CHUNK_SIZE + y] >>> 16)
+				return false;
+			blockdata[x * CHUNK_SIZE * CHUNK_SIZE + z * CHUNK_SIZE + y] &= 0xFFFF;
+			blockdata[x * CHUNK_SIZE * CHUNK_SIZE + z * CHUNK_SIZE + y] |= (0xFFFF & amount) << 16;
+		} else {
+			if (amount == ((blockdata[x * CHUNK_SIZE * CHUNK_SIZE + z * CHUNK_SIZE + y] >>> channel.getShiftAmmount()+16) & 0xF))
+				return false;
+			blockdata[x * CHUNK_SIZE * CHUNK_SIZE + z * CHUNK_SIZE + y] &= ~(0xF << channel.getShiftAmmount()+16);
+			blockdata[x * CHUNK_SIZE * CHUNK_SIZE + z * CHUNK_SIZE + y] |= (0xF & amount) << channel.getShiftAmmount()+16;
+		}
+		return true;
 	}
 }

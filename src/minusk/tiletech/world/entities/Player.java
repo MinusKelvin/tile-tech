@@ -82,7 +82,7 @@ public class Player extends Entity {
 //			System.out.println("Not looking at a block");
 		} else {
 			if (GLHandler.getMouseTap(GLFW_MOUSE_BUTTON_LEFT)) {
-				System.out.printf("Looking at %d, %d, %d id: %d\n", raytrace.pos.x, raytrace.pos.y, raytrace.pos.z,
+				System.out.printf("Looking at %d, %d, %d id: %d%n", raytrace.pos.x, raytrace.pos.y, raytrace.pos.z,
 						World.getWorld().getTile(raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, dimension).id);
 				if (World.getWorld().getTile(raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, dimension).id != Tile.Bedrock.id)
 					World.getWorld().setTile(raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, dimension, Tile.Air.id);

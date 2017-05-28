@@ -109,7 +109,7 @@ public class GLHandler {
 		// Base Shader
 		{
 			int vertex = glCreateShader(GL_VERTEX_SHADER);
-			glShaderSource(vertex, new Scanner(GLHandler.class.getResourceAsStream("/res/shaders/base.vs.glsl")).useDelimiter("\\Z").next());
+			glShaderSource(vertex, new Scanner(GLHandler.class.getResourceAsStream("/res/shaders/base.vs.glsl"), "utf-8").useDelimiter("\\Z").next());
 			glCompileShader(vertex);
 			if (glGetShaderi(vertex, GL_COMPILE_STATUS) != 1) {
 				System.err.println(glGetShaderInfoLog(vertex));
@@ -117,7 +117,7 @@ public class GLHandler {
 			}
 			
 			int fragment = glCreateShader(GL_FRAGMENT_SHADER);
-			glShaderSource(fragment, new Scanner(GLHandler.class.getResourceAsStream("/res/shaders/base.fs.glsl")).useDelimiter("\\Z").next());
+			glShaderSource(fragment, new Scanner(GLHandler.class.getResourceAsStream("/res/shaders/base.fs.glsl"), "utf-8").useDelimiter("\\Z").next());
 			glCompileShader(fragment);
 			if (glGetShaderi(fragment, GL_COMPILE_STATUS) != 1) {
 				System.err.println(glGetShaderInfoLog(fragment));
@@ -149,7 +149,7 @@ public class GLHandler {
 		// Shadow Shader
 		{
 			int vertex = glCreateShader(GL_VERTEX_SHADER);
-			glShaderSource(vertex, new Scanner(GLHandler.class.getResourceAsStream("/res/shaders/shadow.vs.glsl")).useDelimiter("\\Z").next());
+			glShaderSource(vertex, new Scanner(GLHandler.class.getResourceAsStream("/res/shaders/shadow.vs.glsl"), "utf-8").useDelimiter("\\Z").next());
 			glCompileShader(vertex);
 			if (glGetShaderi(vertex, GL_COMPILE_STATUS) != 1) {
 				System.err.println(glGetShaderInfoLog(vertex));
@@ -157,7 +157,7 @@ public class GLHandler {
 			}
 			
 			int fragment = glCreateShader(GL_FRAGMENT_SHADER);
-			glShaderSource(fragment, new Scanner(GLHandler.class.getResourceAsStream("/res/shaders/shadow.fs.glsl")).useDelimiter("\\Z").next());
+			glShaderSource(fragment, new Scanner(GLHandler.class.getResourceAsStream("/res/shaders/shadow.fs.glsl"), "utf-8").useDelimiter("\\Z").next());
 			glCompileShader(fragment);
 			if (glGetShaderi(fragment, GL_COMPILE_STATUS) != 1) {
 				System.err.println(glGetShaderInfoLog(fragment));
@@ -184,7 +184,7 @@ public class GLHandler {
 		// GUI Shader
 		{
 			int vertex = glCreateShader(GL_VERTEX_SHADER);
-			glShaderSource(vertex, new Scanner(GLHandler.class.getResourceAsStream("/res/shaders/gui.vs.glsl")).useDelimiter("\\Z").next());
+			glShaderSource(vertex, new Scanner(GLHandler.class.getResourceAsStream("/res/shaders/gui.vs.glsl"), "utf-8").useDelimiter("\\Z").next());
 			glCompileShader(vertex);
 			if (glGetShaderi(vertex, GL_COMPILE_STATUS) != 1) {
 				System.err.println(glGetShaderInfoLog(vertex));
@@ -192,7 +192,7 @@ public class GLHandler {
 			}
 			
 			int fragment = glCreateShader(GL_FRAGMENT_SHADER);
-			glShaderSource(fragment, new Scanner(GLHandler.class.getResourceAsStream("/res/shaders/gui.fs.glsl")).useDelimiter("\\Z").next());
+			glShaderSource(fragment, new Scanner(GLHandler.class.getResourceAsStream("/res/shaders/gui.fs.glsl"), "utf-8").useDelimiter("\\Z").next());
 			glCompileShader(fragment);
 			if (glGetShaderi(fragment, GL_COMPILE_STATUS) != 1) {
 				System.err.println(glGetShaderInfoLog(fragment));
@@ -319,7 +319,7 @@ public class GLHandler {
 	
 	public static void releaseMouse() {
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-		glfwSetCursorPos(window, width/2, height/2);
+		glfwSetCursorPos(window, width/2.0, height/2.0);
 	}
 	
 	public static void prepareShadow(int phase) {
@@ -356,7 +356,7 @@ public class GLHandler {
 	public static void prepareGUI() {
 		glUseProgram(guiShader);
 		glBindTexture(GL_TEXTURE_2D_ARRAY, guiTex);
-		Matrix4f mat = new Matrix4f().setOrthoSymmetric(width/2,-height/2,-1,1);
+		Matrix4f mat = new Matrix4f().setOrthoSymmetric(width/2f,-height/2f,-1,1);
 		ByteBuffer buf = je_malloc(64);
 		mat.get(buf);
 		glUniformMatrix4fv(guiProjLoc, 1, false, buf);

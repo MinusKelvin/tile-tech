@@ -10,9 +10,9 @@ import java.util.List;
 /**
  * Created by MinusKelvin on 2/9/16.
  */
-public class VerticalChunk {
+class VerticalChunk {
 	Chunk[] chunks = new Chunk[8];
-	private int[][] highPoints = new int[32][32];
+	private int[][] highPoints = new int[Chunk.CHUNK_SIZE][Chunk.CHUNK_SIZE];
 	private int x,z,dim;
 	private boolean gen;
 	
@@ -37,7 +37,7 @@ public class VerticalChunk {
 				for (int k = 255; k >= 0; k--) {
 					if (chunks[k >> 5].getTile(i, k & 0x1F, j) != Tile.Air.id)
 						break;
-					chunks[k >> 5].setLight(i, k & 0x1F, j, World.LIGHT_SUN, 15);
+					chunks[k >> 5].rawSetLight(i, k & 0x1F, j, LightChannel.SUN, 15);
 				}
 			}
 		}

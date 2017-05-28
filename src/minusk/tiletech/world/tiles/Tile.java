@@ -1,5 +1,6 @@
 package minusk.tiletech.world.tiles;
 
+import minusk.tiletech.world.LightChannel;
 import minusk.tiletech.world.entities.Entity;
 import minusk.tiletech.world.tiles.standard.StandardEmptyTile;
 import minusk.tiletech.world.tiles.standard.StandardSolidTile;
@@ -44,16 +45,18 @@ public abstract class Tile {
 	public abstract boolean isTransparentWest(int x, int y, int z, int dim);
 	
 	public abstract boolean contributesAO(int x, int y, int z, int dim);
+	public abstract int getLuminosity(int x, int y, int z, int dim, LightChannel channel);
 	
 	/** Only called when the entity intersects the block, exists for blocks that aren't fully solid */
 	public abstract boolean collide(int x, int y, int z, int dim, Entity entity);
-	public abstract boolean raytrace(int x, int y, int z, int dim, RayAabIntersection ray);
 	public abstract float highX(int x, int y, int z, int dim, Entity entity);
 	public abstract float lowX(int x, int y, int z, int dim, Entity entity);
 	public abstract float highY(int x, int y, int z, int dim, Entity entity);
 	public abstract float lowY(int x, int y, int z, int dim, Entity entity);
 	public abstract float highZ(int x, int y, int z, int dim, Entity entity);
 	public abstract float lowZ(int x, int y, int z, int dim, Entity entity);
+	
+	public abstract boolean raytrace(int x, int y, int z, int dim, RayAabIntersection ray);
 	
 	public abstract int render(Tile[][][] chunkAndEdges, ByteBuffer vertices, int verticesLeft, int x, int y, int z, int dim);
 	

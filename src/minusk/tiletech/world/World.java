@@ -3,6 +3,7 @@ package minusk.tiletech.world;
 import minusk.tiletech.render.GLHandler;
 import minusk.tiletech.utils.DirectionalBoolean;
 import minusk.tiletech.utils.OpenSimplexNoise;
+import minusk.tiletech.utils.UniqueQueue;
 import minusk.tiletech.world.entities.Player;
 import minusk.tiletech.world.structures.Cave;
 import minusk.tiletech.world.tiles.Tile;
@@ -14,6 +15,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static minusk.tiletech.utils.Util.*;
+import static minusk.tiletech.world.LightChannel.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.glUniform4f;
 import static org.lwjgl.opengl.GL20.glUniformMatrix4fv;
@@ -29,14 +31,8 @@ import static org.lwjgl.system.jemalloc.JEmalloc.je_malloc;
  * 
  * Created by MinusKelvin on 1/25/16.
  */
-public class World {
+public final class World {
 	private static World currentWorld;
-	
-	// Yes, my lighting system is weird as heck
-	public static final int LIGHT_RED = 0;
-	public static final int LIGHT_GREEN = 1;
-	public static final int LIGHT_BLUE = 2;
-	public static final int LIGHT_SUN = 3;
 	
 	public final Player player = new Player();
 	public final long seed = 534634958076L;
@@ -53,6 +49,7 @@ public class World {
 	private final Vector2i index2b = new Vector2i();
 	private final Vector3i index3 = new Vector3i();
 	private final Vector<Vector3i> updateList = new Vector<>();
+	private final Queue<Vector3i> lightUpdatePoints = new UniqueQueue<>(512);
 	private final Vector<Vector3i> generatePoints = new Vector<>();
 	private final Vector3f sundir = new Vector3f(0, 1, 0.3f).normalize(), last = new Vector3f();
 	
@@ -82,7 +79,7 @@ public class World {
 			for (int j = -12; j <= 12; j++)
 				if (i < -4 || i > 4 || j < -4 || j > 4)
 					generatePoints.add(new Vector3i(i,j,0));
-		generatePoints.sort((v1,v2) -> Long.compare(v1.lengthSquared(), v2.lengthSquared()));
+		generatePoints.sort(Comparator.comparingLong(Vector3i::lengthSquared));
 		worldGenThread.start();
 	}
 	
@@ -95,7 +92,7 @@ public class World {
 			return Tile.getTile(world.get(index2a).chunks[getCnk(y)].getTile(cnkIdx(x),cnkIdx(y),cnkIdx(z)));
 	}
 	
-	public int getLight(int x, int y, int z, int dim, int channel) {
+	public int getLight(int x, int y, int z, int dim, LightChannel channel) {
 		Chunk chunk = getChunk(getCnk(x), getCnk(y), getCnk(z), dim);
 		if (chunk == null)
 			return 0;
@@ -122,9 +119,10 @@ public class World {
 			chunk.setTile(cnkIdx(x),cnkIdx(y),cnkIdx(z),id);
 	}
 	
-	public void setLight(int x, int y, int z, int dim, int channel, int amount) {
+	public void setLight(int x, int y, int z, int dim, LightChannel channel, int amount) {
 		Chunk chunk = getChunk(getCnk(x), getCnk(y), getCnk(z), dim);
-		chunk.setLight(cnkIdx(x),cnkIdx(y),cnkIdx(z), channel, amount);
+		if (chunk != null)
+			chunk.setLight(cnkIdx(x),cnkIdx(y),cnkIdx(z), channel, amount);
 	}
 	
 	public Tile genGetTile(int x, int y, int z, int dim) {
@@ -161,6 +159,12 @@ public class World {
 		updateList.add(new Vector3i(x,y,z));
 	}
 	
+	public void requestLightUpdate(int x, int y, int z, int dim) {
+		synchronized (lightUpdatePoints) {
+			lightUpdatePoints.add(new Vector3i(x, y, z));
+		}
+	}
+	
 	public int random(int min, int max) {
 		return (int) (Math.random()*(max-min)+min);
 	}
@@ -169,10 +173,140 @@ public class World {
 		player.update();
 		last.set(sundir);
 		sundir.rotate(new Quaternionf(new AxisAngle4f(0.000087266f, 0, 0, 1)));
+		
+		for (int i = 0; i < 64; i++) {
+			if (lightUpdatePoints.isEmpty())
+				break;
+			Vector3i tilepos;
+			synchronized (lightUpdatePoints) {
+				tilepos = lightUpdatePoints.poll();
+			}
+			lightTile(tilepos.x, tilepos.y, tilepos.z, 0);
+		}
+	}
+	
+	private void lightTile(int x, int y, int z, int dim) {
+		Tile thisTile = getTile(x,y,z,dim);
+		
+		boolean lit = y == 255 && thisTile.isTransparentTop(x,y,z,dim);
+		int neighbourMaxSun = 0;
+		int neighbourMaxRed = 0;
+		int neighbourMaxGreen = 0;
+		int neighbourMaxBlue = 0;
+		
+		if (thisTile.isTransparentNorth(x,y,z,dim)) {
+			int olight = getLight(x,y,z-1,dim, null);
+			int osun = olight >> SUN.getShiftAmmount() & 0xF;
+			int ored = olight >> RED.getShiftAmmount() & 0xF;
+			int ogreen = olight >> GREEN.getShiftAmmount() & 0xF;
+			int oblue = olight >> BLUE.getShiftAmmount() & 0xF;
+			if (osun > neighbourMaxSun)
+				neighbourMaxSun = osun;
+			if (ored > neighbourMaxRed)
+				neighbourMaxRed = ored;
+			if (ogreen > neighbourMaxGreen)
+				neighbourMaxGreen = ogreen;
+			if (oblue > neighbourMaxBlue)
+				neighbourMaxBlue = oblue;
+		}
+		if (thisTile.isTransparentSouth(x,y,z,dim)) {
+			int olight = getLight(x,y,z+1,dim, null);
+			int osun = olight >> SUN.getShiftAmmount() & 0xF;
+			int ored = olight >> RED.getShiftAmmount() & 0xF;
+			int ogreen = olight >> GREEN.getShiftAmmount() & 0xF;
+			int oblue = olight >> BLUE.getShiftAmmount() & 0xF;
+			if (osun > neighbourMaxSun)
+				neighbourMaxSun = osun;
+			if (ored > neighbourMaxRed)
+				neighbourMaxRed = ored;
+			if (ogreen > neighbourMaxGreen)
+				neighbourMaxGreen = ogreen;
+			if (oblue > neighbourMaxBlue)
+				neighbourMaxBlue = oblue;
+		}
+		if (thisTile.isTransparentWest(x,y,z,dim)) {
+			int olight = getLight(x-1,y,z,dim, null);
+			int osun = olight >> SUN.getShiftAmmount() & 0xF;
+			int ored = olight >> RED.getShiftAmmount() & 0xF;
+			int ogreen = olight >> GREEN.getShiftAmmount() & 0xF;
+			int oblue = olight >> BLUE.getShiftAmmount() & 0xF;
+			if (osun > neighbourMaxSun)
+				neighbourMaxSun = osun;
+			if (ored > neighbourMaxRed)
+				neighbourMaxRed = ored;
+			if (ogreen > neighbourMaxGreen)
+				neighbourMaxGreen = ogreen;
+			if (oblue > neighbourMaxBlue)
+				neighbourMaxBlue = oblue;
+		}
+		if (thisTile.isTransparentEast(x,y,z,dim)) {
+			int olight = getLight(x+1,y,z,dim, null);
+			int osun = olight >> SUN.getShiftAmmount() & 0xF;
+			int ored = olight >> RED.getShiftAmmount() & 0xF;
+			int ogreen = olight >> GREEN.getShiftAmmount() & 0xF;
+			int oblue = olight >> BLUE.getShiftAmmount() & 0xF;
+			if (osun > neighbourMaxSun)
+				neighbourMaxSun = osun;
+			if (ored > neighbourMaxRed)
+				neighbourMaxRed = ored;
+			if (ogreen > neighbourMaxGreen)
+				neighbourMaxGreen = ogreen;
+			if (oblue > neighbourMaxBlue)
+				neighbourMaxBlue = oblue;
+		}
+		if (thisTile.isTransparentBottom(x,y,z,dim)) {
+			int olight = getLight(x,y-1,z,dim, null);
+			int osun = olight >> SUN.getShiftAmmount() & 0xF;
+			int ored = olight >> RED.getShiftAmmount() & 0xF;
+			int ogreen = olight >> GREEN.getShiftAmmount() & 0xF;
+			int oblue = olight >> BLUE.getShiftAmmount() & 0xF;
+			if (osun > neighbourMaxSun)
+				neighbourMaxSun = osun;
+			if (ored > neighbourMaxRed)
+				neighbourMaxRed = ored;
+			if (ogreen > neighbourMaxGreen)
+				neighbourMaxGreen = ogreen;
+			if (oblue > neighbourMaxBlue)
+				neighbourMaxBlue = oblue;
+		}
+		if (thisTile.isTransparentTop(x,y,z,dim)) {
+			int olight = getLight(x,y+1,z,dim, null);
+			int osun = olight >> SUN.getShiftAmmount() & 0xF;
+			int ored = olight >> RED.getShiftAmmount() & 0xF;
+			int ogreen = olight >> GREEN.getShiftAmmount() & 0xF;
+			int oblue = olight >> BLUE.getShiftAmmount() & 0xF;
+			if (osun > neighbourMaxSun)
+				neighbourMaxSun = osun;
+			if (osun == 15)
+				lit = true;
+			if (ored > neighbourMaxRed)
+				neighbourMaxRed = ored;
+			if (ogreen > neighbourMaxGreen)
+				neighbourMaxGreen = ogreen;
+			if (oblue > neighbourMaxBlue)
+				neighbourMaxBlue = oblue;
+		}
+		
+		int sun = lit ? 15 : thisTile.getLuminosity(x,y,z,dim, SUN);
+		int red = thisTile.getLuminosity(x,y,z,dim, RED);
+		int green = thisTile.getLuminosity(x,y,z,dim, GREEN);
+		int blue = thisTile.getLuminosity(x,y,z,dim, BLUE);
+		
+		if (sun < neighbourMaxSun) sun = neighbourMaxSun - 1;
+		if (red < neighbourMaxRed) red = neighbourMaxRed - 1;
+		if (green < neighbourMaxGreen) green = neighbourMaxGreen - 1;
+		if (blue < neighbourMaxBlue) blue = neighbourMaxBlue - 1;
+		
+		int light = 0;
+		light |= sun << SUN.getShiftAmmount();
+		light |= red << RED.getShiftAmmount();
+		light |= green << GREEN.getShiftAmmount();
+		light |= blue << BLUE.getShiftAmmount();
+		setLight(x,y,z,dim, null, light);
 	}
 	
 	public void renderWorld(float alpha) {
-		Vector3f effectiveSunDir = new Vector3f(last).mul(alpha).add(new Vector3f(sundir).mul(1-alpha)).normalize();
+		Vector3f effectiveSunDir = new Vector3f(last).lerp(sundir, alpha).normalize();
 		
 		lookaround.identity();
 		lookaround.lookAlong(player.look.x, player.look.y, player.look.z, 0, 1, 0);
@@ -320,7 +454,7 @@ public class World {
 	
 	private void genCave(int x, int z) {
 		Cave cave = new Cave();
-		Random rng = new Random(seed + x*17317 + z*5557);
+		Random rng = new Random(seed + x*17317L + z*5557L);
 		int segcount = (int) ((rng.nextDouble()+0.25)*48);
 		float h = rng.nextInt(256);
 		Vector3f pos = new Vector3f(x*32+rng.nextInt(32), (h*h)/256, z*32+rng.nextInt(32));
