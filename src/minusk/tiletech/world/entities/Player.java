@@ -65,14 +65,14 @@ public class Player extends Entity {
 		if (!(mv.x == mv.y && mv.y == mv.z && mv.x == 0))
 			mv.normalize();
 		
-		velocity.add(mv.mul(0.65f));
+		velocity.add(mv.mul(0.2f));
 		velocity.mul(0.5f, 0.95f, 0.5f);
 		velocity.y -= 0.1f;
 		
 		DirectionalBoolean collides = move();
 		
 		if (collides.down && GLHandler.getKey(GLFW_KEY_SPACE))
-			velocity.y = 1.3f;
+			velocity.y = 0.6f;
 		if (GLHandler.getTap(GLFW_KEY_R))
 			spawn();
 		
@@ -82,10 +82,17 @@ public class Player extends Entity {
 //			System.out.println("Not looking at a block");
 		} else {
 			if (GLHandler.getMouseTap(GLFW_MOUSE_BUTTON_LEFT)) {
-				System.out.printf("Looking at %d, %d, %d id: %d%n", raytrace.pos.x, raytrace.pos.y, raytrace.pos.z,
-						World.getWorld().getTile(raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, dimension).id);
-				if (World.getWorld().getTile(raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, dimension).id != Tile.Bedrock.id)
-					World.getWorld().setTile(raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, dimension, Tile.Air.id);
+				System.out.printf("Looking at %d, %d, %d id: %d%n", raytrace.pos.x(), raytrace.pos.y(), raytrace.pos.z(),
+						World.getWorld().getTile(raytrace.pos.x(), raytrace.pos.y(), raytrace.pos.z(), dimension).id);
+				if (World.getWorld().getTile(raytrace.pos.x(), raytrace.pos.y(), raytrace.pos.z(), dimension).id != Tile.Bedrock.id)
+					World.getWorld().setTile(raytrace.pos.x(), raytrace.pos.y(), raytrace.pos.z(), dimension, Tile.Air.id);
+			} else if (GLHandler.getMouseTap(GLFW_MOUSE_BUTTON_RIGHT)) {
+				if (World.getWorld().getTile(raytrace.pos.x()+raytrace.side.xOffset,
+						raytrace.pos.y()+raytrace.side.yOffset,
+						raytrace.pos.z()+raytrace.side.zOffset, dimension).id == Tile.Air.id)
+					World.getWorld().setTile(raytrace.pos.x()+raytrace.side.xOffset,
+							raytrace.pos.y()+raytrace.side.yOffset,
+							raytrace.pos.z()+raytrace.side.zOffset, dimension, Tile.Torch.id);
 			}
 		}
 	}
@@ -97,18 +104,26 @@ public class Player extends Entity {
 		
 		ByteBuffer buffer = je_calloc(Chunk.BYTES_PER_VERTEX,36);
 		
-		if (raytrace.side.up)
-			FaceRenderer.renderTopFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 8, 0, 0xffffff, 0xffffff, 0xffffff, 0xffffff);
-		else if (raytrace.side.down)
-			FaceRenderer.renderBottomFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 8, 0, 0xffffff, 0xffffff, 0xffffff, 0xffffff);
-		else if (raytrace.side.west)
-			FaceRenderer.renderWestFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 8, 0, 0xffffff, 0xffffff, 0xffffff, 0xffffff);
-		else if (raytrace.side.east)
-			FaceRenderer.renderEastFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 8, 0, 0xffffff, 0xffffff, 0xffffff, 0xffffff);
-		else if (raytrace.side.north)
-			FaceRenderer.renderNorthFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 8, 0, 0xffffff, 0xffffff, 0xffffff, 0xffffff);
-		else if (raytrace.side.south)
-			FaceRenderer.renderSouthFace(buffer, 0, raytrace.pos.x, raytrace.pos.y, raytrace.pos.z, 8, 0, 0xffffff, 0xffffff, 0xffffff, 0xffffff);
+		switch (raytrace.side) {
+			case UP:
+				FaceRenderer.renderTopFace(buffer, 0, raytrace.pos.x(), raytrace.pos.y(), raytrace.pos.z(), 8, 0, 0xffffff, 0xffffff, 0xffffff, 0xffffff);
+				break;
+			case DOWN:
+				FaceRenderer.renderBottomFace(buffer, 0, raytrace.pos.x(), raytrace.pos.y(), raytrace.pos.z(), 8, 0, 0xffffff, 0xffffff, 0xffffff, 0xffffff);
+				break;
+			case WEST:
+				FaceRenderer.renderWestFace(buffer, 0, raytrace.pos.x(), raytrace.pos.y(), raytrace.pos.z(), 8, 0, 0xffffff, 0xffffff, 0xffffff, 0xffffff);
+				break;
+			case EAST:
+				FaceRenderer.renderEastFace(buffer, 0, raytrace.pos.x(), raytrace.pos.y(), raytrace.pos.z(), 8, 0, 0xffffff, 0xffffff, 0xffffff, 0xffffff);
+				break;
+			case NORTH:
+				FaceRenderer.renderNorthFace(buffer, 0, raytrace.pos.x(), raytrace.pos.y(), raytrace.pos.z(), 8, 0, 0xffffff, 0xffffff, 0xffffff, 0xffffff);
+				break;
+			case SOUTH:
+				FaceRenderer.renderSouthFace(buffer, 0, raytrace.pos.x(), raytrace.pos.y(), raytrace.pos.z(), 8, 0, 0xffffff, 0xffffff, 0xffffff, 0xffffff);
+				break;
+		}
 		
 		buffer.position(0);
 		

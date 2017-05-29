@@ -211,9 +211,7 @@ public final class Chunk {
 	 */
 	public void setTile(int x, int y, int z, short id) {
 		Tile.getTile(getTile(x,y,z) & 0xFFFF).onDelete(x+this.x, y+this.y, z+this.z, dim);
-		blockdata[x*CHUNK_SIZE*CHUNK_SIZE + z*CHUNK_SIZE + y] &= ~0xFFFF;
-		blockdata[x*CHUNK_SIZE*CHUNK_SIZE + z*CHUNK_SIZE + y] |= id & 0xFFFF;
-		blockMeta.remove(new Vector3i(x,y,z));
+		rawSetTile(x,y,z,id);
 		Tile.getTile(id).onCreate(x+this.x, y+this.y, z+this.z, dim);
 		for (int i = -1; i < 2; i++)
 			for (int j = -1; j < 2; j++)
@@ -235,6 +233,7 @@ public final class Chunk {
 		if (blockdata == null)
 			blockdata = new int[CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE];
 		blockdata[x*CHUNK_SIZE*CHUNK_SIZE + z*CHUNK_SIZE + y] = id & 0xFFFF;
+		blockMeta.remove(new Vector3i(x,y,z));
 	}
 	
 	public int getLight(int x, int y, int z, LightChannel channel) {

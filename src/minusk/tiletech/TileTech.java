@@ -71,7 +71,7 @@ public class TileTech {
 			
 			glfwSwapBuffers(window);
 			glfwPollEvents();
-			System.out.println((glfwGetTime() - t) * 1000);
+//			System.out.println((glfwGetTime() - t) * 1000);
 		}
 	}
 	

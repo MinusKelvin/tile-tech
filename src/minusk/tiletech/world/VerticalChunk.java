@@ -34,7 +34,8 @@ class VerticalChunk {
 		
 		for (int i = 0; i < 32; i++) {
 			for (int j = 0; j < 32; j++) {
-				for (int k = 255; k >= 0; k--) {
+				int k = 255;
+				for (; k >= 0; k--) {
 					if (chunks[k >> 5].getTile(i, k & 0x1F, j) != Tile.Air.id)
 						break;
 					chunks[k >> 5].rawSetLight(i, k & 0x1F, j, LightChannel.SUN, 15);

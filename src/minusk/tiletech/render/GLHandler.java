@@ -85,6 +85,7 @@ public class GLHandler {
 			projection.setPerspective((float) Math.toRadians(90), (float) width/height, 0.1f, 1512);
 			GLHandler.width = width;
 			GLHandler.height = height;
+			System.out.println("resize to "+width+", "+height);
 		}));
 		
 		glfwSetCursorPosCallback(window, cp = GLFWCursorPosCallback.create((win, x, y) -> {

@@ -24,6 +24,22 @@ public abstract class Tile {
 	public static final Tile Maple_Leaves = new StandardTransparentTile((short) 4,5, 5, 5, 5, 5, 5, 0.5f);
 	public static final Tile Bedrock = new StandardSolidTile((short) 5,6,6,6,6,6,6,0);
 	public static final Tile Stone = new StandardSolidTile((short) 6,7,7,7,7,7,7,0);
+	public static final Tile Torch = new StandardTransparentTile((short) 7, 9, 9, 9, 9, 9, 9, 0) {
+		@Override
+		public int getLuminosity(int x, int y, int z, int dim, LightChannel channel) {
+			switch (channel) {
+				case RED: return 15;
+				case GREEN: return 14;
+				case BLUE: return 13;
+				default: return 0;
+			}
+		}
+		
+		@Override
+		public boolean collide(int x, int y, int z, int dim, Entity entity) {
+			return false;
+		}
+	};
 	
 	public static Tile getTile(int id) {
 		return TILES[id & 0xFFFF];

@@ -1,7 +1,7 @@
 package minusk.tiletech.world;
 
 import minusk.tiletech.render.GLHandler;
-import minusk.tiletech.utils.DirectionalBoolean;
+import minusk.tiletech.utils.Direction;
 import minusk.tiletech.utils.OpenSimplexNoise;
 import minusk.tiletech.utils.UniqueQueue;
 import minusk.tiletech.world.entities.Player;
@@ -14,8 +14,10 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static minusk.tiletech.utils.Direction.*;
 import static minusk.tiletech.utils.Util.*;
 import static minusk.tiletech.world.LightChannel.*;
+import static org.lwjgl.glfw.GLFW.glfwGetTime;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.glUniform4f;
 import static org.lwjgl.opengl.GL20.glUniformMatrix4fv;
@@ -51,7 +53,7 @@ public final class World {
 	private final Vector<Vector3i> updateList = new Vector<>();
 	private final Queue<Vector3i> lightUpdatePoints = new UniqueQueue<>(512);
 	private final Vector<Vector3i> generatePoints = new Vector<>();
-	private final Vector3f sundir = new Vector3f(0, 1, 0.3f).normalize(), last = new Vector3f();
+	private final Vector3f sundir = new Vector3f(0.6f, 0.4f, 0.3f).normalize(), last = new Vector3f(sundir);
 	
 	public World() {
 		currentWorld = this;
@@ -174,7 +176,8 @@ public final class World {
 		last.set(sundir);
 		sundir.rotate(new Quaternionf(new AxisAngle4f(0.000087266f, 0, 0, 1)));
 		
-		for (int i = 0; i < 64; i++) {
+		double t = glfwGetTime();
+		for (int i = 0; i < 2048; i++) {
 			if (lightUpdatePoints.isEmpty())
 				break;
 			Vector3i tilepos;
@@ -183,6 +186,11 @@ public final class World {
 			}
 			lightTile(tilepos.x, tilepos.y, tilepos.z, 0);
 		}
+		t = (glfwGetTime() - t) * 1000;
+		if (t > 1)
+			System.out.println("Lighting: " + t + " ms");
+		if (lightUpdatePoints.size() > 0)
+			System.out.println(lightUpdatePoints.size());
 	}
 	
 	private void lightTile(int x, int y, int z, int dim) {
@@ -479,34 +487,33 @@ public final class World {
 		int dx = (int) Math.signum(dirx), dy = (int) Math.signum(diry), dz = (int) Math.signum(dirz);
 		
 		if (getTile(cx,cy,cz,dimension).raytrace(cx,cy,cz,dimension,intersect)) {
-			RaytraceResult result = new RaytraceResult();
-			result.pos.set(cx, cy, cz);
+			Direction side;
 			if (Math.abs(dirx) > Math.abs(diry)) {
 				if (Math.abs(dirx) > Math.abs(dirz)) {
 					if (dx == 1)
-						result.side.west = true; // if looking +X you see the -X face
+						side = WEST; // if looking +X you see the -X face
 					else
-						result.side.east = true; // if looking -X you see the +X face
+						side = EAST; // if looking -X you see the +X face
 				} else {
 					if (dz == 1)
-						result.side.north = true; // if looking +Z you see the -Z face
+						side = NORTH; // if looking +Z you see the -Z face
 					else
-						result.side.south = true; // if looking -Z you see the +Z face
+						side = SOUTH; // if looking -Z you see the +Z face
 				}
 			} else {
 				if (Math.abs(diry) > Math.abs(dirz)) {
 					if (dy == 1)
-						result.side.down = true; // if looking +Y you see the -Y face
+						side = DOWN; // if looking +Y you see the -Y face
 					else
-						result.side.up = true; // if looking -Y you see the +Y face
+						side = UP; // if looking -Y you see the +Y face
 				} else {
 					if (dz == 1)
-						result.side.north = true; // if looking +Z you see the -Z face
+						side = NORTH; // if looking +Z you see the -Z face
 					else
-						result.side.south = true; // if looking -Z you see the +Z face
+						side = SOUTH; // if looking -Z you see the +Z face
 				}
 			}
-			return result;
+			return new RaytraceResult(new Vector3i(cx, cy, cz), side);
 		}
 		
 		for (int i = 0; i < maxBlocks; i++) {
@@ -532,37 +539,34 @@ public final class World {
 				if (xchange && intersect.test(cx+dx,cy,cz,cx+dx+1,cy+1,cz+1)) {
 					cx += dx;
 					if (getTile(cx,cy,cz,dimension).raytrace(cx,cy,cz,dimension,intersect)) {
-						RaytraceResult result = new RaytraceResult();
-						result.pos.set(cx, cy, cz);
+						Direction side;
 						if (dx == 1)
-							result.side.west = true; // if looking +X you see the -X face
+							side = WEST; // if looking +X you see the -X face
 						else
-							result.side.east = true; // if looking -X you see the +X face
-						return result;
+							side = EAST; // if looking -X you see the +X face
+						return new RaytraceResult(new Vector3i(cx, cy, cz), side);
 					}
 					xchange = false;
 				} else if (ychange && intersect.test(cx,cy+dy,cz,cx+1,cy+dy+1,cz+1)) {
 					cy += dy;
 					if (getTile(cx,cy,cz,dimension).raytrace(cx,cy,cz,dimension,intersect)) {
-						RaytraceResult result = new RaytraceResult();
-						result.pos.set(cx, cy, cz);
+						Direction side;
 						if (dy == 1)
-							result.side.down = true; // if looking +Y you see the -Y face
+							side = DOWN; // if looking +Y you see the -Y face
 						else
-							result.side.up = true; // if looking -Y you see the +Y face
-						return result;
+							side = UP; // if looking -Y you see the +Y face
+						return new RaytraceResult(new Vector3i(cx, cy, cz), side);
 					}
 					ychange = false;
 				} else if (zchange && intersect.test(cx,cy,cz+dz,cx+1,cy+1,cz+dz+1)) {
 					cz += dz;
 					if (getTile(cx,cy,cz,dimension).raytrace(cx,cy,cz,dimension,intersect)) {
-						RaytraceResult result = new RaytraceResult();
-						result.pos.set(cx, cy, cz);
+						Direction side;
 						if (dz == 1)
-							result.side.north = true; // if looking +Z you see the -Z face
+							side = NORTH; // if looking +Z you see the -Z face
 						else
-							result.side.south = true; // if looking -Z you see the +Z face
-						return result;
+							side = SOUTH; // if looking -Z you see the +Z face
+						return new RaytraceResult(new Vector3i(cx, cy, cz), side);
 					}
 					zchange = false;
 				}
@@ -572,8 +576,13 @@ public final class World {
 	}
 	
 	public static class RaytraceResult {
-		public final Vector3i pos = new Vector3i();
-		public final DirectionalBoolean side = new DirectionalBoolean(false);
+		public final Vector3ic pos;
+		public final Direction side;
+		
+		private RaytraceResult(Vector3ic pos, Direction side) {
+			this.pos = pos;
+			this.side = side;
+		}
 	}
 	
 	public static World getWorld() {
